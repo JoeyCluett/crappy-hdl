@@ -15,12 +15,11 @@
 static int port_list_type;
 
 static const int state_default = 0;
-static const int state_module_header_empty_expect_assign = 1;
-static const int state_module_header_empty_expect_empty  = 2;
-static const int state_module_header_empty_expect_semic  = 3;
+static const int state_module_header_empty_expect_assign = 1; // header '=' empty;
+static const int state_module_header_empty_expect_empty  = 2; // header = 'empty';
+static const int state_module_header_empty_expect_semic  = 3; // header = empty ';'
 static const int state_module_header_empty_expect_start  = 4;
-static const int state_module_header_inout_port_colon    = 5;
-static const int state_module_header_inout_port          = 6;
+static const int state_handle_inout_port                 = 5;
 static int state_current = state_default;
 
 bool parse_module_header(
@@ -31,12 +30,12 @@ bool parse_module_header(
         const std::string& filename,
         hdl_module_t* module_ptr) {
 
-    //std::cout << "parse_module_header : " << lexer_token_name_and_value(token, src) << std::endl;
+    std::cout << "parse_module_header : " << lexer_token_name_and_value(token, src) << std::endl;
 
     switch(state_current) {
     case state_default:
 
-        // need one of 'header', 'in_ports', 'out_ports'
+        // need one of 'header', 'in_ports', 'out_ports', 'in', 'out'
         if(token.type == LexerToken_KW_header) { // 'header'
 
             if(module_ptr->header_status == module_header_not_empty) {
@@ -57,7 +56,9 @@ bool parse_module_header(
             token_iter++;
             return false;
         }
-        else if(token.type == LexerToken_KW_in_ports || token.type == LexerToken_KW_out_ports) { // 'in_ports'
+        else if(token.type == LexerToken_KW_in_ports || token.type == LexerToken_KW_out_ports) {
+            // 'in_ports', 'out_ports', 'in', or 'out'
+            
             if(module_ptr->header_status == module_header_empty) {
                 throw_parse_error(
                     "Module '" + module_ptr->name + "' header previously declared empty",
@@ -66,13 +67,11 @@ bool parse_module_header(
             else {
                 // in/out port is acceptable
                 module_ptr->header_status = module_header_not_empty;
+                state_current = state_handle_inout_port;
 
-                // port type can only be one of the following
-                if(token.type == LexerToken_KW_in_ports) { port_list_type = PORT_LIST_TYPE_IN;
-                } else {                                   port_list_type = PORT_LIST_TYPE_OUT; }
+                // dont advance token iterator
+                //token_iter++;
 
-                state_current = state_module_header_inout_port_colon;
-                token_iter++;
                 return false;
             }
         }
@@ -154,28 +153,12 @@ bool parse_module_header(
         }
         break;
 
-    case state_module_header_inout_port_colon:
-        if(token.type == LexerToken_Syntax_Colon) {
-            state_current = state_module_header_inout_port;
-            token_iter++;
-            return false;
-        }
-        else {
-            throw_parse_error(
-                "Expecting ':'. Received token of type [" + lexer_token_name_and_value(token, src) + "]",
-                filename, src, token.start, token);
-        }
-        break;
+    case state_handle_inout_port:
 
-    case state_module_header_inout_port:
-        if(parse_module_inout_port(rt, token, token_iter, src, filename, module_ptr, port_list_type)) {
+        if(parse_module_inout_port(rt, token, token_iter, src, filename, module_ptr)) {
             state_current = state_default;
-            //token_iter++;
-            return false;
         }
-        else {
-            return false;
-        }
-        break;
+        return false;
+    
     }
 }

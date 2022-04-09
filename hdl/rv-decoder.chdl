@@ -1,0 +1,169 @@
+
+module RV_Unmarshaller(void)
+    in_ports  : inst[32];
+
+    out_ports : opcode[7], rs1[5], rs2[5], rd[5];
+    out_ports : funct3[3], funct[7];
+    out_ports : I_imm[32], S_imm[32], B_imm[32], U_imm[32], J_imm[32];
+start
+
+    opcode[{ 0 : 6 }] = inst[{  0 :  6 }];
+    rs1[   { 0 : 4 }] = inst[{ 15 : 19 }];
+    rs2[   { 0 : 4 }] = inst[{ 20 : 24 }];
+    rd[    { 0 : 4 }] = inst[{  7 : 11 }];
+    funct3[{ 0 : 2 }] = inst[{ 12 : 14 }];
+    funct7[{ 0 : 6 }] = inst[{ 25 : 31 }];
+
+    //
+    // stitch together all the different types of immediates
+    //
+    I_imm[0]           = inst[20];
+    I_imm[{  1 :  4 }] = inst[{ 21 : 24 }];
+    I_imm[{  5 : 10 }] = inst[{ 25 : 30 }];
+    I_imm[{ 11 : 31 }] = inst[31];
+
+    S_imm[0]           = inst[20];
+    S_imm[{ 1 : 4 }]   = inst[{ 8 : 11 }];
+    S_imm[{ 5 : 10 }]  = inst[{ 25 : 30 }];
+    S_imm[{ 11 : 31 }] = inst[31];
+
+    B_imm[0]           = @'0';
+    B_imm[{ 1 : 4 }]   = inst[{ 8 : 11 }];
+    B_imm[{ 5 : 10 }]  = inst[{ 25 : 30 }];
+    B_imm[11]          = inst[7];
+    B_imm[{ 12 : 31 }] = inst[{ 31 }];
+
+    U_imm[{ 0 : 11 }]  = @'0b0000_0000_0000';
+    U_imm[{ 12 : 19 }] = inst[{ 12 : 19 }];
+    U_imm[{ 20 : 30 }] = inst[{ 20 : 30 }];
+    U_imm[{ 31 }]      = inst[{ 31 }];
+
+    J_imm[0]           = @'0';
+    J_imm[{ 1 : 4 }]   = inst[{ 21 : 24 }];
+    J_imm[{ 5 : 10 }]  = inst[{ 25 : 30 }];
+    J_imm[11]          = inst[20]
+    J_imm[{ 12 : 19 }] = inst[{ 12 : 19 }];
+    J_imm[{ 20 : 31 }] = inst[{ 31 }];
+
+end
+
+module RV_Decoder(void)
+    in_ports: inst[32];
+
+    out_ports: imm32;
+    out_ports: rs1[5], rs2[5], rd[5];
+
+    out_ports: LUI;
+    out_ports: AUIPC;
+    out_ports: JAL;
+    out_ports: JALR;
+    out_ports: BEQ, BNE, BLT, BGE, BLTU, BGEU;
+    out_ports: LB, LH, LW, LBU, LHU;
+    out_ports: SB, SH, SW;
+    out_ports: ADDI, SLTI, SLTIU, XORI, ORI, ANDI, SLLI, SRLI, SRAI;
+    out_ports: ADD, SUB, SLL, SLT, SLTU, XOR, SRL, SRA, OR, AND
+
+    out_ports: ECALL;
+
+    out_ports: IGNORED;
+
+    //
+    // ignore FENCE, FENCE.I, and EBREAK
+    // ECALL will just jump to a known location in memory (hardcoded for simplicity)
+    // idk if i will implement the CSR instructions
+    // they seem like the meaning of CSRs is highly platform dependent
+    //
+
+start
+
+    local Unm : RV_Unmarshaller();
+    Unm.inst = inst;
+
+    rs1 = Unm.rs1;
+    rs2 = Unm.rs2;
+    rd  = Unm.rd;
+
+    //
+    // 'CmpEq' is a built-in module type
+    //
+    local opc_0110111 : builtin.CMP_EQ(0b0110111, 7, Unm.opcode); // LUI
+    local opc_0010111 : builtin.CMP_EQ(0b0010111, 7, Unm.opcode); // AUIPC
+    local opc_1101111 : builtin.CMP_EQ(0b1101111, 7, Unm.opcode); // JAL
+    local opc_1100111 : builtin.CMP_EQ(0b1100111, 7, Unm.opcode); // JALR
+    local opc_1100011 : builtin.CMP_EQ(0b1100011, 7, Unm.opcode); // BEQ, BNE, BLT, BGE, BLTU, BGEU
+    local opc_0000011 : builtin.CMP_EQ(0b0000011, 7, Unm.opcode); // LB, LH, LW, LBU, LHU
+    local opc_0100011 : builtin.CMP_EQ(0b0100011, 7, Unm.opcode); // SB, SH, SW
+    local opc_0010011 : builtin.CMP_EQ(0b0010011, 7, Unm.opcode); // ADDI, SLTI, SLTIU, XORI, ORI, ANDI, SLLI, SRLI, SRAI
+    local opc_0110011 : builtin.CMP_EQ(0b0110011, 7, Unm.opcode); // ADD, SUB, SLL, SLT, SLTU, XOR, SRL, SRA, OR, AND
+    local opc_0001111 : builtin.CMP_EQ(0b0001111, 7, Unm.opcode); // FENCE, FENCE.I (both ignored, but we still need to decode them)
+    local opc_1110011 : builtin.CMP_EQ(0b1110011, 7, Unm.opcode); // ECALL, ignored: EBREAK, CSRRW, CSRRS, CSRRC, CSRRWI, CSRRSI, CSRRCI
+
+    local fn3_000 : builtin.CMP_EQ(0b000, 3, Unm.funct3); local fn3_001 : builtin.CMP_EQ(0b001, 3, Unm.funct3);
+    local fn3_010 : builtin.CMP_EQ(0b010, 3, Unm.funct3); local fn3_011 : builtin.CMP_EQ(0b011, 3, Unm.funct3);
+    local fn3_100 : builtin.CMP_EQ(0b100, 3, Unm.funct3); local fn3_101 : builtin.CMP_EQ(0b101, 3, Unm.funct3);
+    local fn3_110 : builtin.CMP_EQ(0b110, 3, Unm.funct3); local fn3_111 : builtin.CMP_EQ(0b111, 3, Unm.funct3);
+
+    local fn7_0000000 : builtin.CMP_EQ(0b0000000, 7, Unm.funct7);
+    local fn7_0100000 : builtin.CMP_EQ(0b0100000, 7, Unm.funct7);
+
+    local fn_ECALL : builtin.CMP_EQ(0b00000000_00000000_00000000_01110011, 32, inst);
+
+    //
+    // define each instruction-out bit as the 
+    // proper combination of above comparison outputs
+    //
+
+    LUI   = opc_0110111.output;
+    AUIPC = opc_0010111.output;
+    JAL   = opc_1101111.output;
+    JALR  = opc_1100111.output & fn3_000.output;
+
+    BEQ   = opc_1100011.output & fn3_000.output;
+    BNE   = opc_1100011.output & fn3_001.output;
+    BLT   = opc_1100011.output & fn3_100.output;
+    BGE   = opc_1100011.output & fn3_101.output;
+    BLTU  = opc_1100011.output & fn3_110.output;
+    BGEU  = opc_1100011.output & fn3_111.output;
+
+    LB    = opc_0000011.output & fn3_000.output;
+    LH    = opc_0000011.output & fn3_001.output;
+    LW    = opc_0000011.output & fn3_010.output;
+    LBU   = opc_0000011.output & fn3_100.output;
+    LHU   = opc_0000011.output & fn3_101.output;
+
+    SB    = opc_0100011.output & fn3_000.output;
+    SH    = opc_0100011.output & fn3_001.output;
+    SW    = opc_0100011.output & fn3_010.output;
+
+    ADDI  = opc_0010011.output & fn3_000.output;
+    SLTI  = opc_0010011.output & fn3_010.output;
+    SLTIU = opc_0010011.output & fn3_011.output;
+    XORI  = opc_0010011.output & fn3_100.output;
+    ORI   = opc_0010011.output & fn3_110.output;
+    ANDI  = opc_0010011.output & fn3_111.output;
+    SLLI  = opc_0010011.output & fn3_001.output & fn7_0000000.output;
+    SRLI  = opc_0010011.output & fn3_101.output & fn7_0000000.output;
+    SRAI  = opc_0010011.output & fn3_101.output & fn7_0100000.output;
+
+    ADD   = opc_0110011.output & fn3_000.output & fn7_0000000.output;
+    SUB   = opc_0110011.output & fn3_000.output & fn7_0100000.output;
+    SLL   = opc_0110011.output & fn3_001.output & fn7_0000000.output;
+    SLT   = opc_0110011.output & fn3_010.output & fn7_0000000.output;
+    SLTU  = opc_0110011.output & fn3_011.output & fn7_0000000.output;
+    XOR   = opc_0110011.output & fn3_100.output & fn7_0000000.output;
+    SRL   = opc_0110011.output & fn3_101.output & fn7_0000000.output;
+    SRA   = opc_0110011.output & fn3_101.output & fn7_0100000.output;
+    OR    = opc_0110011.output & fn3_110.output & fn7_0000000.output;
+    AND   = opc_0110011.output & fn3_111.output & fn7_0000000.output;
+
+    ECALL = fn_ECALL.output;
+
+    IGNORED = !(
+            LUI | AUIPC | JAL | JALR | BEQ | BNE | BLT | 
+            BGE | BLTU | BGEU | LB | LH | LW | LBU | 
+            LHU | SB | SH | SW | ADDI | SLTI | SLTIU | 
+            XORI | ORI | ANDI | SLLI | SRLI | SRAI | ADD | 
+            SUB | SLL | SLT | SLTU | XOR | SRL | SRA | 
+            OR | AND | ECALL);
+
+end

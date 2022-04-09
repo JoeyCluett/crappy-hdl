@@ -9,8 +9,14 @@
 #include <src/hdl-variant.h>
 #include <src/lexical-token.h>
 
-//extern "C" 
-bool parse_module_inout_port(
+//
+// parse expression of the form:
+//
+// local varname : typename;
+// local varname : typename = INIT_VALUE;
+//
+
+bool parse_local_decl(
         HDL_Runtime_t* rt,
         LexerToken_t token,
         std::vector<LexerToken_t>::const_iterator& token_iter,

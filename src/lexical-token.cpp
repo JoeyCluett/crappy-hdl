@@ -17,12 +17,16 @@ const std::string lexer_token_name(int token_type) {
     case LexerToken_KW_string:    return "Keyword:string";
     case LexerToken_KW_header:    return "Keyword:header";
     case LexerToken_KW_empty:     return "Keyword:empty";
+    case LexerToken_KW_void:      return "Keyword:void";
+    case LexerToken_KW_uinteger:  return "Keyword:uinteger";
 
-    case LexerToken_VarName: return "VariableName";
+    case LexerToken_VarName:          return "VariableName";
+    case LexerToken_BitLiteralMulti:  return "MultiBitLiteral";
+    case LexerToken_BitLiteralSingle: return "SingleBitLiteral";
 
     case LexerToken_Syntax_Semicolon: return "Syntax:semicolon";
     case LexerToken_Syntax_Colon:     return "Syntax:colon";
-    case LexerToken_Syntax_Assign:    return "Syntax:assignment";
+    case LexerToken_Syntax_Assign:    return "Syntax:assignment"; // =
     case LexerToken_Syntax_Period:    return "Syntax:period";
     case LexerToken_Syntax_LBracket:  return "Syntax:leftbracket";
     case LexerToken_Syntax_RBracket:  return "Syntax:rightbracket";
@@ -31,6 +35,19 @@ const std::string lexer_token_name(int token_type) {
     case LexerToken_Syntax_Dollar:    return "Syntax:dollar";
     case LexerToken_Syntax_LParen:    return "Syntax:leftparen";
     case LexerToken_Syntax_RParen:    return "Syntax:rightparen";
+
+    case LexerToken_Syntax_Not:    return "Syntax:not";
+    case LexerToken_Syntax_LBrace: return "Syntax:leftbrace";
+    case LexerToken_Syntax_RBrace: return "Syntax:rightbrace";
+    case LexerToken_Syntax_At:     return "Syntax:at";
+
+    case LexerToken_Syntax_Invert:   return "Syntax:invert"; // ~
+    case LexerToken_Syntax_GrThan:   return "Syntax:greaterthan";
+    case LexerToken_Syntax_LsThan:   return "Syntax:lessthan";
+    case LexerToken_Syntax_GrEq:     return "Syntax:greaterthaneq";
+    case LexerToken_Syntax_LsEq:     return "Syntax:lessthaneq";
+    case LexerToken_Syntax_Equiv:    return "Syntax:equiv";    // ==
+    case LexerToken_Syntax_NotEquiv: return "Syntax:notequiv"; // !=
 
     case LexerToken_NumberDec: return "Number:decimal";
     case LexerToken_NumberHex: return "Number:hexadecimal";
@@ -47,6 +64,27 @@ const bool lexer_token_is_number_type(const LexerToken_t& token) {
         token.type == LexerToken_NumberDec ||
         token.type == LexerToken_NumberHex ||
         token.type == LexerToken_NumberBin;
+}
+
+const bool lexer_token_is_typename(const LexerToken_t& token) {
+    return
+        token.type == LexerToken_KW_integer  ||
+        token.type == LexerToken_KW_uinteger ||
+        token.type == LexerToken_KW_string;
+}
+
+const bool lexer_token_is_bitliteral_type(const LexerToken_t& token) {
+    return
+        token.type == LexerToken_BitLiteralSingle ||
+        token.type == LexerToken_BitLiteralMulti;
+}
+
+const size_t lexer_token_bitliteral_size(const LexerToken_t& token) {
+
+}
+
+const std::string lexer_token_bitliteral_str_repr(const LexerToken_t& token) {
+
 }
 
 const std::string lexer_token_string_eval(LexerToken_t token, const std::vector<char>& src) {
@@ -113,6 +151,14 @@ const std::string lexer_token_name_and_value(const LexerToken_t& token, const st
     else if(token.type == LexerToken_StringLiteral) {
         return lexer_token_name(token.type) + "='" + lexer_token_value(token, src) + "',value='" + 
         lexer_token_string_eval(token, src) + "'";
+    }
+    else if(lexer_token_is_bitliteral_type(token)) {
+        if(token.type == LexerToken_BitLiteralMulti) {
+            return lexer_token_name(token.type) + "=\"" + lexer_token_value(token, src) + "\"";
+        }
+        else { // LexerToken_BitLiteralSingle
+            return lexer_token_name(token.type) + "=\"" + lexer_token_value(token, src) + "\"";
+        }
     }
     else {
         return lexer_token_name(token.type) + "='" + lexer_token_value(token, src) + "'";

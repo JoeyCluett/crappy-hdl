@@ -5,6 +5,14 @@
 
 #include <src/error-util.h>
 
+void hdl_runtime_toplevel_delete(HDL_Runtime_t* rt) {
+    for(auto& p : rt->modules) {
+        delete p.second;
+    }
+
+    delete rt;
+}
+
 void hdl_runtime_add_import_name(
         HDL_Runtime_t* rt, 
         const std::string& file_to_import) {
@@ -83,26 +91,8 @@ void hdl_runtime_print(std::ostream& os, HDL_Runtime_t* rt) {
         os << "  " << p.first << "\n";
         for(auto& ports : p.second->module_io_port_interface) {
 
-            os << "    " << ports.first << " : ";
+            //os << "    " << ports.first << " : \n";
 
-            if(ports.second.which() == module_io_type_input) {
-                module_input_t min = boost::get<module_input_t>(ports.second);
-                if(min.type == type_bit) {
-                    os << "input,bit" << std::endl;
-                }
-                else {
-                    os << "input,bitvector[size=" << min.bitvector.len << "]" << std::endl;
-                }
-            }
-            else { // output
-                module_output_t mout = boost::get<module_output_t>(ports.second);
-                if(mout.type == type_bit) {
-                    os << "output,bit" << std::endl;
-                }
-                else {
-                    os << "output,bitvector[size=" << mout.bitvector.len << "]" << std::endl;
-                }
-            }
         }
     }
 
@@ -120,3 +110,6 @@ const int hdl_runtime_add_module(HDL_Runtime_t* rt, hdl_module_t* module) {
         return HDL_ADD_MODULE_ALREADY_EXISTS;
     }
 }
+
+
+

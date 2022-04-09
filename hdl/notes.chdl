@@ -1,4 +1,8 @@
-
+//
+// operators in order of highest priority first
+//
+// .()!&^|=
+//
 
 //
 // keywords:

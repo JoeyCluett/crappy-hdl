@@ -9,6 +9,7 @@
 #include <src/hdl-variant.h>
 #include <src/lexical-token.h>
 
+#include <src/parse-fsm/module/parse-arg-list.h>
 #include <src/parse-fsm/module/parse-header.h>
 #include <src/parse-fsm/module/parse-body.h>
 

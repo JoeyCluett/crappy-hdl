@@ -12,10 +12,10 @@ RST=`tput sgr0`
 #
 # additional project folders specified here:
 #
-SRC_FOLDERS=( src src/parse-fsm src/parse-fsm/module )
+SRC_FOLDERS=( src src/parse-fsm src/parse-fsm/module src/ir )
 
 COMPILER="g++"
-STDOPTS="-fPIE -I. -std=c++11 -O3"
+STDOPTS=""
 LINKOPTS=""
 ALL_OBJS=""
 
@@ -29,7 +29,7 @@ if [[ $1 == "--help" ]]; then
 elif [[ $1 == "--asan" ]]; then
 
     printf "\n${MAG}Generating Makefile with ${GRN}ASAN${MAG} options enabled${RST}\n\n"
-    STDOPTS="-fPIE -lm -I. -std=c++11 -O3 -g -fsanitize=address"
+    STDOPTS="-fPIE -lm -I. -std=c++11 -O1 -g -fsanitize=address"
 
 elif [[ $1 == "--valgrind" ]]; then
 
@@ -39,6 +39,7 @@ elif [[ $1 == "--valgrind" ]]; then
 elif [[ $1 == "--release" ]]; then
 
     printf "\n${MAG}Generating Makefile with standard build options enabled${RST}\n\n"
+    STDOPTS="-fPIE -I. -std=c++11 -O3"
 
 else
     printf "\nrun build script with option ${BLU}--help${RST} to see available options\n\n"

@@ -20,6 +20,8 @@ struct HDL_Runtime_t {
     std::vector<std::string> string_constants;
 };
 
+void hdl_runtime_toplevel_delete(HDL_Runtime_t* rt);
+
 void hdl_runtime_add_import_name(HDL_Runtime_t* rt, const std::string& file_to_import);
 
 bool hdl_runtime_has_unimported_files(HDL_Runtime_t* rt);
@@ -44,7 +46,6 @@ void hdl_runtime_print(std::ostream& os, HDL_Runtime_t* rt);
 
 //
 // add module (pointer) to runtime
-// throws exception on error
 //
 const int HDL_ADD_MODULE_SUCCESS        = 0;
 const int HDL_ADD_MODULE_ALREADY_EXISTS = 1;

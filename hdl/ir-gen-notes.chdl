@@ -1,0 +1,38 @@
+
+OutPort[{ 0 : in_width }] = InPort[{ 0 : in_width }];
+
+/*
+    IR : intermediate representation
+    WS : work stack
+    ExpS : expression stack (used for shunting yard)
+*/
+
+
+'OutPort'       IR : push VarName('OutPort')
+    '['           state change - EvaluateIndex
+        expect one of [ '$', '{', '*', NumericLiteral, VariableName ]
+        '{'     WS : push NumericRange
+                ... EvaluateNumericStatement
+                IR : push 0
+        ':'
+                ... EvaluateNumericStatement
+                IR : push VarValue(in_width)
+        '}'     IR : EvaluateNumericRange
+    ']'         IR - from WS : EvaluateBitVectorSubsetFromNumericRange
+
+'='     WS : push Assign (IR gen later)
+
+'InPort'        IR : push varname
+    '['         EvaluateIndex
+        expect one of [ '$', '{', '*', NumericLiteral, VariableName ]
+        '{'     WS : push NumericRange
+                ... EvaluateNumericStatement
+                IR : push 0
+        ':'
+                ... EvaluateNumericStatement
+                IR : push VarValue(in_width)
+        '}'     IR : EvaluateNumericRange
+    ']'         IR - from WS : EvaluateBitVectorSubsetFromNumericRange
+
+';'     FromWS : Assign // Assign has many context-dependent meanings. the runtime will figure out which one it is
+

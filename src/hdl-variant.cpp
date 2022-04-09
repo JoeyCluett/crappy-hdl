@@ -19,3 +19,7 @@ const std::string hdl_variant_str_repr(const hdl_variant_t& hdl_var) {
 
     return ss.str();
 }
+
+const int hdl_variant_type(const hdl_variant_t& hdl_var) {
+    return hdl_var.which();
+}
