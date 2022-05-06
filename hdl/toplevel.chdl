@@ -12,33 +12,7 @@ global ResetActive  : integer =  0; // active low reset
 
 global GlString : string = "hi\s\s\s\s\sspaces";
 
-//
-//module FancyNewModule
-//    out_ports: AddressBus[global.AddressWidth], DataOut[global.CpuWidth];
-//
-//    in_ports: DataIn[0x0000_0020], MemReady;
-//start
-//    // nothing in the body
-//    // this is the simplest module possible
-//
-//    
-//
-//end
-//
-//module TopLevelCpu
-//    header = empty;
-//start
-//
-//
-//
-//    // body of module definition
-//end
-//
-
-
-module SignExtend
-
-(in_width : integer, out_width : integer, message : string)
+module SignExtend(in_width : integer, out_width : integer, message : string)
     in: InPort[in_width];
     out: OutPort[out_width];
 start

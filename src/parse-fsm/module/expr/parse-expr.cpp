@@ -1,7 +1,8 @@
-#pragma once
+#include "parse-expr.h"
 
 #include <vector>
 #include <string>
+#include <stdexcept>
 
 #include <src/error-util.h>
 #include <src/hdl-module.h>
@@ -9,18 +10,16 @@
 #include <src/hdl-variant.h>
 #include <src/lexical-token.h>
 
-//
-// parse expression of the form:
-//
-// local varname : typename;
-// local varname : typename = INIT_VALUE;
-//
+#include <src/ir/opcodes.h>
 
-bool parse_local_decl(
+bool parse_expr(
         HDL_Runtime_t* rt,
         LexerToken_t token,
         std::vector<LexerToken_t>::const_iterator& token_iter,
         const std::vector<char>& src,
         const std::string& filename,
-        hdl_module_t* module_ptr);
+        hdl_module_t* module_ptr) {
 
+
+
+}

@@ -35,6 +35,11 @@ std::vector<LexerToken_t>
         { '<', { LexerToken_Syntax_LsThan   , true  }}, // <    special
         { '{', { LexerToken_Syntax_LBrace   , false }},
         { '}', { LexerToken_Syntax_RBrace   , false }},
+        { '|', { LexerToken_Syntax_Pipe     , false }}, // |   bitwise OR
+        { '&', { LexerToken_Syntax_Ampersand, false }}, // &   bitwise AND
+        { '^', { LexerToken_Syntax_Caret    , false }}, // ^   bitwise XOR
+        { '+', { LexerToken_Syntax_Plus     , false }}, // +   addition
+        { '-', { LexerToken_Syntax_Minus    , false }}, // -   subtraction
         //{ '@', { LexerToken_Syntax_At       , false }}, // this is syntax but it plays a much larger role than other syntax
     };
 
@@ -340,6 +345,7 @@ static void handle_word_token(LexerToken_t& token, std::vector<LexerToken_t>& tk
         { "empty",     LexerToken_KW_empty     },
         { "void",      LexerToken_KW_void      },
         { "local",     LexerToken_KW_local     },
+        { "builtin",   LexerToken_KW_builtin   },
     };
 
     auto iter = keyword_list.find(word);

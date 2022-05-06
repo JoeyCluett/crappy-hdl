@@ -19,10 +19,11 @@ const int LexerToken_KW_empty     = 10;
 const int LexerToken_KW_void      = 11;
 const int LexerToken_KW_uinteger  = 12; // typename
 const int LexerToken_KW_local     = 13;
+const int LexerToken_KW_builtin   = 14;
 
-const int LexerToken_VarName          = 14;
-const int LexerToken_BitLiteralMulti  = 15;
-const int LexerToken_BitLiteralSingle = 16;
+const int LexerToken_VarName          = 15;
+const int LexerToken_BitLiteralMulti  = 16;
+const int LexerToken_BitLiteralSingle = 17;
 
 #define NVALUE (LexerToken_BitLiteralSingle + 1)
 
@@ -50,13 +51,19 @@ const int LexerToken_Syntax_LsEq      = NVALUE + 19; // <=
 const int LexerToken_Syntax_Equiv     = NVALUE + 20; // ==
 const int LexerToken_Syntax_NotEquiv  = NVALUE + 21; // !=
 
+const int LexerToken_Syntax_Pipe      = NVALUE + 22; // |   bitwise OR
+const int LexerToken_Syntax_Ampersand = NVALUE + 23; // &   bitwise AND
+const int LexerToken_Syntax_Caret     = NVALUE + 24; // ^   bitwise XOR
+
+const int LexerToken_Syntax_Plus      = NVALUE + 25; // +
+const int LexerToken_Syntax_Minus     = NVALUE + 26; // -
+
 #undef NVALUE
-#define NVALUE (LexerToken_Syntax_NotEquiv + 1)
+#define NVALUE (LexerToken_Syntax_Minus + 1)
 
 const int LexerToken_NumberDec        = NVALUE + 0; // 0, 1, 2, 2321212
 const int LexerToken_NumberHex        = NVALUE + 1; // 0xff, 0x1234
 const int LexerToken_NumberBin        = NVALUE + 2; // 0b001010010
-
 const int LexerToken_StringLiteral    = NVALUE + 3;
 
 #undef NVALUE

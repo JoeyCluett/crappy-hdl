@@ -11,7 +11,7 @@
 #include <src/lexical-token.h>
 
 static const int state_expect_start = 0;
-static const int state_default      = 1;
+static const int state_default      = 1; // iterate through until we hit 'end'
 
 int state_current = state_expect_start;
 
@@ -33,6 +33,10 @@ bool parse_module_body(
 
             state_current = state_default;
             token_iter++;
+
+            module_serialize(module_ptr, src, std::cout);
+            exit(1);
+
             return false;
         }
         else {

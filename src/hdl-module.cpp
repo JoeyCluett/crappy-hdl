@@ -1,6 +1,97 @@
 #include "hdl-module.h"
 
 #include <iostream>
+#include <vector>
+#include <assert.h>
+
+/*
+struct hdl_module_t {
+    int header_status;
+    std::string name;
+
+    // waste of memory, but each argument has entries in two different structures
+    std::vector<std::pair<std::string, int>> argument_vector;   // { name, type }  type is one of hdl_variant_*
+    std::map<std::string, std::pair<int, size_t>> argument_map; // { nane, { type, index (in arg vector) } } type is one of hdl_variant_*
+
+    std::map<std::string, module_port_t> module_io_port_interface;
+    size_t n_in_ports;
+    size_t n_out_ports;
+
+    std::vector<std::string> string_array;
+    std::vector<uint8_t> byte_code;
+};
+*/
+
+void module_serialize(hdl_module_t* m, const std::vector<char>& src, std::ostream& os) {
+
+    os << "\n\nNAME " << m->name << "\n";
+
+    assert(m->argument_vector.size() == m->argument_map.size());
+
+    os << "ARGSIZE " << m->argument_vector.size() << "\n";
+    for(size_t i = 0ul; i < m->argument_vector.size(); i++) {
+        const auto& p = m->argument_vector.at(i);
+        os << "ARG " << p.first << ' ' << "TYPE:" << p.second << "\n";
+    }
+
+    os << "PORTSIZE " << m->module_io_port_interface.size() << "\n";
+    for(auto& p : m->module_io_port_interface) {
+        os << "PORT " << p.first << " IO:" << p.second.io_type << " TYPE:" << p.second.type << " EXT:" << p.second.global_index << "\n";
+    }
+
+    os << "STRINGSIZE " << m->string_array.size() << "\n";
+    for(auto& s : m->string_array) {
+        os << "STR " << s << "\n";
+    }
+
+    os << "BYTECODESIZE " << m->byte_code.size() << "\n";
+    for(auto b : m->byte_code) {
+        os << "0123456789ABCDEF"[(b >> 4) & 0x0F];
+        os << "0123456789ABCDEF"[(b >> 0) & 0x0F];
+        os << ' ';
+    }
+
+    os << "SRC\n";
+    auto src_iter = src.begin();
+    auto end_iter = src.end();
+
+    while(src_iter != end_iter) {
+        for(int i = 0; i < 32; i++) {
+            if(src_iter == end_iter) {
+                break;
+            }
+
+            const char b = *src_iter;
+            os << "0123456789ABCDEF"[(b >> 4) & 0x0F];
+            os << "0123456789ABCDEF"[(b >> 0) & 0x0F];
+
+            src_iter++;
+        }
+        os << "\n";
+    }
+
+
+    os << std::endl;
+}
+
+size_t module_byte(hdl_module_t* m, const uint8_t bytecode) {
+    m->byte_code.push_back(bytecode);
+    return m->byte_code.size();
+}
+
+size_t module_u32(hdl_module_t* m, const uint32_t u32) {
+    union {
+        uint8_t buf[4];
+        uint32_t u32;
+    } u;
+
+    u.u32 = u32;
+
+    for(int i = 0; i < 4; i++)
+        m->byte_code.push_back(u.buf[i]);
+
+    return m->byte_code.size();
+}
 
 static std::string rpad(const std::string& s, int len) {
     std::string s_ = s;

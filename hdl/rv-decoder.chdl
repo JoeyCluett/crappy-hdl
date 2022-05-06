@@ -76,7 +76,7 @@ module RV_Decoder(void)
 
 start
 
-    local Unm : RV_Unmarshaller();
+    local Unm = RV_Unmarshaller();
     Unm.inst = inst;
 
     rs1 = Unm.rs1;
@@ -86,27 +86,31 @@ start
     //
     // 'CmpEq' is a built-in module type
     //
-    local opc_0110111 : builtin.CMP_EQ(0b0110111, 7, Unm.opcode); // LUI
-    local opc_0010111 : builtin.CMP_EQ(0b0010111, 7, Unm.opcode); // AUIPC
-    local opc_1101111 : builtin.CMP_EQ(0b1101111, 7, Unm.opcode); // JAL
-    local opc_1100111 : builtin.CMP_EQ(0b1100111, 7, Unm.opcode); // JALR
-    local opc_1100011 : builtin.CMP_EQ(0b1100011, 7, Unm.opcode); // BEQ, BNE, BLT, BGE, BLTU, BGEU
-    local opc_0000011 : builtin.CMP_EQ(0b0000011, 7, Unm.opcode); // LB, LH, LW, LBU, LHU
-    local opc_0100011 : builtin.CMP_EQ(0b0100011, 7, Unm.opcode); // SB, SH, SW
-    local opc_0010011 : builtin.CMP_EQ(0b0010011, 7, Unm.opcode); // ADDI, SLTI, SLTIU, XORI, ORI, ANDI, SLLI, SRLI, SRAI
-    local opc_0110011 : builtin.CMP_EQ(0b0110011, 7, Unm.opcode); // ADD, SUB, SLL, SLT, SLTU, XOR, SRL, SRA, OR, AND
-    local opc_0001111 : builtin.CMP_EQ(0b0001111, 7, Unm.opcode); // FENCE, FENCE.I (both ignored, but we still need to decode them)
-    local opc_1110011 : builtin.CMP_EQ(0b1110011, 7, Unm.opcode); // ECALL, ignored: EBREAK, CSRRW, CSRRS, CSRRC, CSRRWI, CSRRSI, CSRRCI
+    local opc_0110111 = builtin.CMP_EQ( 0b0110111, 7, Unm.opcode ); // LUI
+    local opc_0010111 = builtin.CMP_EQ( 0b0010111, 7, Unm.opcode ); // AUIPC
+    local opc_1101111 = builtin.CMP_EQ( 0b1101111, 7, Unm.opcode ); // JAL
+    local opc_1100111 = builtin.CMP_EQ( 0b1100111, 7, Unm.opcode ); // JALR
+    local opc_1100011 = builtin.CMP_EQ( 0b1100011, 7, Unm.opcode ); // BEQ, BNE, BLT, BGE, BLTU, BGEU
+    local opc_0000011 = builtin.CMP_EQ( 0b0000011, 7, Unm.opcode ); // LB, LH, LW, LBU, LHU
+    local opc_0100011 = builtin.CMP_EQ( 0b0100011, 7, Unm.opcode ); // SB, SH, SW
+    local opc_0010011 = builtin.CMP_EQ( 0b0010011, 7, Unm.opcode ); // ADDI, SLTI, SLTIU, XORI, ORI, ANDI, SLLI, SRLI, SRAI
+    local opc_0110011 = builtin.CMP_EQ( 0b0110011, 7, Unm.opcode ); // ADD, SUB, SLL, SLT, SLTU, XOR, SRL, SRA, OR, AND
+    local opc_0001111 = builtin.CMP_EQ( 0b0001111, 7, Unm.opcode ); // FENCE, FENCE.I (both ignored, but we still need to decode them)
+    local opc_1110011 = builtin.CMP_EQ( 0b1110011, 7, Unm.opcode ); // ECALL, ignored: EBREAK, CSRRW, CSRRS, CSRRC, CSRRWI, CSRRSI, CSRRCI
 
-    local fn3_000 : builtin.CMP_EQ(0b000, 3, Unm.funct3); local fn3_001 : builtin.CMP_EQ(0b001, 3, Unm.funct3);
-    local fn3_010 : builtin.CMP_EQ(0b010, 3, Unm.funct3); local fn3_011 : builtin.CMP_EQ(0b011, 3, Unm.funct3);
-    local fn3_100 : builtin.CMP_EQ(0b100, 3, Unm.funct3); local fn3_101 : builtin.CMP_EQ(0b101, 3, Unm.funct3);
-    local fn3_110 : builtin.CMP_EQ(0b110, 3, Unm.funct3); local fn3_111 : builtin.CMP_EQ(0b111, 3, Unm.funct3);
+    local fn3_000 = builtin.CMP_EQ(0b000, 3, Unm.funct3); 
+    local fn3_001 = builtin.CMP_EQ(0b001, 3, Unm.funct3);
+    local fn3_010 = builtin.CMP_EQ(0b010, 3, Unm.funct3); 
+    local fn3_011 = builtin.CMP_EQ(0b011, 3, Unm.funct3);
+    local fn3_100 = builtin.CMP_EQ(0b100, 3, Unm.funct3); 
+    local fn3_101 = builtin.CMP_EQ(0b101, 3, Unm.funct3);
+    local fn3_110 = builtin.CMP_EQ(0b110, 3, Unm.funct3); 
+    local fn3_111 = builtin.CMP_EQ(0b111, 3, Unm.funct3);
 
-    local fn7_0000000 : builtin.CMP_EQ(0b0000000, 7, Unm.funct7);
-    local fn7_0100000 : builtin.CMP_EQ(0b0100000, 7, Unm.funct7);
+    local fn7_0000000 = builtin.CMP_EQ(0b0000000, 7, Unm.funct7);
+    local fn7_0100000 = builtin.CMP_EQ(0b0100000, 7, Unm.funct7);
 
-    local fn_ECALL : builtin.CMP_EQ(0b00000000_00000000_00000000_01110011, 32, inst);
+    local fn_ECALL = builtin.CMP_EQ(0b00000000_00000000_00000000_01110011, 32, inst);
 
     //
     // define each instruction-out bit as the 

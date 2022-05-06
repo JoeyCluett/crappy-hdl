@@ -5,6 +5,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <iostream>
 
 struct module_port_t {
     int io_type;
@@ -15,13 +16,11 @@ struct module_port_t {
     // field is ignored for single bit types
     //
     union {
-        size_t argument_index; // which entry in the argument list should be used
-        size_t global_index;   // which entry in global variables table should be used
-        size_t vector_size;    // used when a constant is used to describe the size of the vector
+        size_t vector_size;    // (type=1) used when a constant is used to describe the size of the vector
+        size_t argument_index; // (type=2) which entry in the argument list should be used
+        size_t global_index;   // (type=3) which entry in global variables table should be used
     };
 };
-
-
 
 //
 // for module_port_t::io_type
@@ -57,13 +56,29 @@ struct hdl_module_t {
     size_t n_out_ports;
 
     std::vector<std::string> string_array;
-    std::vector<unsigned int> byte_code;
+    std::vector<uint8_t> byte_code;
 };
 
 const int module_arg_error_no_error                = 0;
 const int module_arg_error_argument_already_exists = 1;
 const int module_arg_error_invalid_arg_index       = 2;
 const int module_arg_error_name_not_found          = 3;
+
+//
+// serialize contents of hdl_module_t
+// can be deserialized later
+//
+void module_serialize(hdl_module_t* m, const std::vector<char>& src, std::ostream& os);
+
+//
+// add given byte to bytecode array
+//
+size_t module_byte(hdl_module_t* m, const uint8_t bytecode);
+
+//
+// add given uint32 to bytecode array
+//
+size_t module_u32(hdl_module_t* m, const uint32_t u32);
 
 //
 // print contents (names and types) of argument list
