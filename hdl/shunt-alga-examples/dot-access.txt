@@ -1,0 +1,50 @@
+
+start: mod.out[len(mod.out) - 1] = oth.f13 | @'0b1';
+final: 
+
+
+
+if current.type == operator:
+    while stack.top.type == operator
+        if current.precedence <= stack.top.precedence
+            output.push(stack.pop())
+    stack.push(current)
+
+if current.type == right_paren:
+    while stack.top.type != left_paren or function:
+        output.push(stack.pop())
+    if stack.top.type == left_paren:
+        stack.pop()
+    elif stack.top.type == function:
+        output.push(stack.pop())
+
+
+mod
+    work: 
+    out:  mod   <-- local
+.
+    work: .   <-- operator
+    out:  mod
+out
+    work: .         <-- operator
+    out:  mod out   <-- "local"
+[
+    work: [           <-- index operator
+    out:  mod out .   <-- operator
+len(
+    work: [ f.len         <-- function reference
+    out:  mod out . FnS   <-- function sentinal
+mod
+    work: [ f.len
+    out:  mod out . FnS mod   <-- local
+.
+    work: [ f.len .           <-- operator
+    out:  mod out . FnS mod
+out
+    work: [ f.len .
+    out:  mod out . FnS mod out   <-- "local"
+)
+    work: [
+    out:  mod out . FnS mod out . f.len   <-- operator and function reference
+
+

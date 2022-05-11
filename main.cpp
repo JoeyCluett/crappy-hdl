@@ -14,7 +14,8 @@ static std::string right_pad(const std::string& input_str, int len);
 
 int main(int argc, char* argv[]) {
 
-    std::string filename = "hdl/toplevel.chdl";
+    //std::string filename = "hdl/toplevel.chdl";
+    std::string filename = "hdl/rv-decoder.chdl";
 
     try {
         auto src    = read_hdl_file_contents(filename);

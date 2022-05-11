@@ -1,6 +1,11 @@
+#include "parse-builtin-ref.h"
+#include "parse-shunt.h"
+
 #include <vector>
 #include <string>
 #include <map>
+#include <stack>
+#include <unordered_set>
 
 #include <src/error-util.h>
 #include <src/hdl-module.h>
@@ -8,10 +13,17 @@
 #include <src/hdl-variant.h>
 #include <src/lexical-token.h>
 
-static const int state_builtin_kw = 0; // 'builtin'.MODULE_TYPE(
-static const int state_dot        = 1; // builtin'.'MODULE_TYPE(
-static const int state_type_ref   = 2; // builtin.'MODULE_TYPE'(
-static const int state_open_paren = 3; // builtin.MODULE_TYPE'('
+
+static const std::unordered_set<const std::string> builtin_module_types = {
+    { "cmpeq" },
+    { "cmpneq" },
+    
+};
+
+static const int state_builtin_kw  = 0; // 'builtin'.MODULE_TYPE(
+static const int state_dot         = 1; // builtin'.'MODULE_TYPE(
+static const int state_module_name = 2; // builtin.'MODULE_TYPE'(
+static const int state_open_paren  = 3; // builtin.MODULE_TYPE'('
 
 static int state_current = state_builtin_kw;
 
@@ -21,7 +33,9 @@ bool parse_builtin_ref(
         std::vector<LexerToken_t>::const_iterator& token_iter,
         const std::vector<char>& src,
         const std::string& filename,
-        hdl_module_t* module_ptr) {
+        hdl_module_t* module_ptr,
+        std::stack<shunting_token_t>& work_stack,
+        std::vector<shunting_token_t>& output_queue) {
 
     //
     // parse builtin.MODULE_TYPE expressions
@@ -41,7 +55,7 @@ bool parse_builtin_ref(
 
     case state_dot:
         if(token.type == LexerToken_Syntax_Period) {
-            state_current = state_type_ref;
+            state_current = state_module_name;
             token_iter++;
             return false;
         }
@@ -50,7 +64,7 @@ bool parse_builtin_ref(
         }
         break;
 
-    case state_type_ref:
+    case state_module_name:
         if(token.type == LexerToken_VarName) {
             state_current = state_open_paren;
             token_iter++;

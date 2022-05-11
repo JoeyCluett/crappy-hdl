@@ -1,0 +1,33 @@
+
+module full_adder(void)
+    in: cin, a, b;
+    out: sum, cout;
+start
+    sum  = a ^ b ^ cin;
+    cout = (a & b) | ((a ^ b) & cin);
+end
+
+//
+// ripple carry adder
+//
+module adder(width : integer)
+    in: cin, a[width], b[width];
+    out: cout, sum[width];
+start
+
+    local adders      = vector();
+    local current_cin = cin;
+
+    for(local i; {0, width })
+    start
+        push(full_adder());
+        adders[$].cin = current_cin;
+        adders[$].a   = a[i];
+        adders[$].b   = b[i];
+        sum[i]        = adders[$].sum;
+        current_cin   = adders[$].cout; // update for next adder
+    end
+
+    cout = current_cin;
+end
+

@@ -16,4 +16,6 @@ bool parse_builtin_ref(
         std::vector<LexerToken_t>::const_iterator& token_iter,
         const std::vector<char>& src,
         const std::string& filename,
-        hdl_module_t* module_ptr);
+        hdl_module_t* module_ptr,
+        std::stack<shunting_token_t>& work_stack,
+        std::vector<shunting_token_t>& output_queue);

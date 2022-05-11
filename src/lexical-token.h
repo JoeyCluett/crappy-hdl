@@ -38,8 +38,8 @@ const int LexerToken_Syntax_Star      = NVALUE +  7; // *
 const int LexerToken_Syntax_Dollar    = NVALUE +  8; // $
 const int LexerToken_Syntax_LParen    = NVALUE +  9; // (
 const int LexerToken_Syntax_RParen    = NVALUE + 10; // )
-const int LexerToken_Syntax_Invert    = NVALUE + 11; // ~
-const int LexerToken_Syntax_Not       = NVALUE + 12; // !     special
+const int LexerToken_Syntax_Invert    = NVALUE + 11; // ~     unary
+const int LexerToken_Syntax_Not       = NVALUE + 12; // !     special, unary
 const int LexerToken_Syntax_LBrace    = NVALUE + 13; // {
 const int LexerToken_Syntax_RBrace    = NVALUE + 14; // }
 const int LexerToken_Syntax_At        = NVALUE + 15; // @
@@ -56,7 +56,7 @@ const int LexerToken_Syntax_Ampersand = NVALUE + 23; // &   bitwise AND
 const int LexerToken_Syntax_Caret     = NVALUE + 24; // ^   bitwise XOR
 
 const int LexerToken_Syntax_Plus      = NVALUE + 25; // +
-const int LexerToken_Syntax_Minus     = NVALUE + 26; // -
+const int LexerToken_Syntax_Minus     = NVALUE + 26; // -   also a unary but the lexer doesnt know that
 
 #undef NVALUE
 #define NVALUE (LexerToken_Syntax_Minus + 1)
@@ -67,6 +67,11 @@ const int LexerToken_NumberBin        = NVALUE + 2; // 0b001010010
 const int LexerToken_StringLiteral    = NVALUE + 3;
 
 #undef NVALUE
+#define NVALUE (LexerToken_StringLiteral + 1)
+
+const int LexerToken_Syntax_UnaryNegative = NVALUE + 0;
+
+
 
 struct LexerToken_t {
     int type;

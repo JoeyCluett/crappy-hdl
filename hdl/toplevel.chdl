@@ -17,15 +17,12 @@ module SignExtend(in_width : integer, out_width : integer, message : string)
     out: OutPort[out_width];
 start
 
-    //assert(out_width >= in_width, "out_width must be greater than or equal to in_width");
-    //assert(in_width > 0, "in_width must be greater than 0");
-    //for range(i : integer; { 0 : in_width }) { OutPort[i] = InPort[i]; } // these two lines do the same thing
-
     local j : string = "Hello From String";
 
-    print(j, "\n");
-
-    j = "Goodbye From String";
+    println(
+        "SignExtend\n", 
+        "\tin_width = ", in_width, 
+        "\n\tout_width = ", out_width);
 
     OutPort[{        0 :  in_width }] = InPort[{ 0 : in_width }]; // many-to-many, matching sizes
     OutPort[{ in_width : out_width }] = InPort[$];                // one-to-many, '$' is shorthand for 'last element'

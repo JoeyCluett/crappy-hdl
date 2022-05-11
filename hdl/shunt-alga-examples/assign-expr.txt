@@ -2,7 +2,7 @@
 '[', ':', and '{' all signal the end of a subexpression
 
 start: ARR[{ a-1 : n + 3 }] = AND(RAA[$], @'0b1');
-final: ARR a 1 - n 3 + } ] FnS RAA @ ] @'0b1' f.AND =
+final: ARR a 1 - n 3 + } ] FnS RAA $ ] @'0b1' f.AND =
 
 
 
@@ -10,67 +10,67 @@ ARR
     work: 
     out:  ARR <-- value
 [
-    work: [ <-- index specifier
-    out:  ARR <-- value
+    work: [     <-- index specifier
+    out:  ARR   <-- value
 {
-    work: [ { <-- range start specifier
+    work: [ {   <-- range start specifier
     out:  ARR
 a
     work: [ {
-    out:  ARR a <-- value
+    out:  ARR a   <-- value
 -
-    work: [ { - <-- operator
+    work: [ { -   <-- operator
     out:  ARR a
 1
     work: [ { -
-    out:  ARR a 1 <-- value
+    out:  ARR a 1   <-- value
 :
-    work: [ { <-- operator removed
-    out:  ARR a 1 - <-- operator
+    work: [ {         <-- operator removed
+    out:  ARR a 1 -   <-- operator
 n
     work: [ {
-    out:  ARR a 1 - n <-- value
+    out:  ARR a 1 - n   <-- value
 +
-    work: [ { + <-- operator
+    work: [ { +         <-- operator
     out:  ARR a 1 - n
 3
     work: [ { +
     out:  ARR a 1 - n 3 <-- value
 }
-    work: [ <-- remove operator and range start
-    out:  ARR a 1 - n 3 + } <-- operator and range
+    work: [                   <-- remove operator and range start
+    out:  ARR a 1 - n 3 + }   <-- operator and range
 ]
     work:
-    out:  ARR a 1 - n 3 + } ] <-- index operator
+    out:  ARR a 1 - n 3 + } ]   <-- index operator
 =
-    work: = <-- operator
+    work: =                     <-- operator
     out:  ARR a 1 - n 3 + } ]
 AND(
-    work: = f.AND <-- function reference
-    out:  ARR a 1 - n 3 + } ] FnS <-- function sentinal
+    work: = f.AND                   <-- function reference
+    out:  ARR a 1 - n 3 + } ] FnS   <-- function sentinal
 RAA
     work: = f.AND
     out:  ARR a 1 - n 3 + } ] FnS RAA <-- value
 [
-    work: = f.AND [ <-- index specifier
+    work: = f.AND [                     <-- index specifier
     out:  ARR a 1 - n 3 + } ] FnS RAA
 $
     work: = f.AND [
-    out:  ARR a 1 - n 3 + } ] FnS RAA @ <-- special value
+    out:  ARR a 1 - n 3 + } ] FnS RAA $   <-- special value
 ]
-    work: = f.AND <-- index specifier removed
-    out:  ARR a 1 - n 3 + } ] FnS RAA @ ] <-- index operator
+    work: = f.AND                           <-- index specifier removed
+    out:  ARR a 1 - n 3 + } ] FnS RAA $ ]   <-- index operator
 ,
     work: = f.AND
-    out:  ARR a 1 - n 3 + } ] FnS RAA @ ]
+    out:  ARR a 1 - n 3 + } ] FnS RAA $ ]
 @'0b1'
     work: = f.AND
-    out:  ARR a 1 - n 3 + } ] FnS RAA @ ] @'0b1' <-- value
+    out:  ARR a 1 - n 3 + } ] FnS RAA $ ] @'0b1'   <-- value
 )
     work: =
-    out:  ARR a 1 - n 3 + } ] FnS RAA @ ] @'0b1' f.AND <-- function call 
+    out:  ARR a 1 - n 3 + } ] FnS RAA $ ] @'0b1' f.AND   <-- function call 
 ;
     work:
-    out:  ARR a 1 - n 3 + } ] FnS RAA @ ] @'0b1' f.AND = <-- operator
+    out:  ARR a 1 - n 3 + } ] FnS RAA $ ] @'0b1' f.AND =   <-- operator
 
 
