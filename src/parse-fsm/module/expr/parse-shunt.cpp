@@ -19,6 +19,10 @@
 static const std::map<const int, const int> precedence_table = {
     { LexerToken_Syntax_Period,  1000 }, // 1000 as highest precedence chosen arbitrarily
 
+    { LexerToken_Syntax_Dollar,   999 },
+    { LexerToken_Syntax_LBracket, 999 },
+    { LexerToken_Syntax_LBrace,   999 },
+
     { LexerToken_Syntax_Invert,        801 }, // ~
     { LexerToken_Syntax_Not,           801 }, // !
     { LexerToken_Syntax_UnaryNegative, 801 }, // -
@@ -56,18 +60,27 @@ static std::stack<shunting_token_t>  work_stack;
 static std::vector<shunting_token_t> output_queue;
 
 static LexerToken_t first_token = { LexerToken_UNKNOWN, -1, -1 };
-static shunting_token_t shunt;
 static std::vector<LexerToken_t>::const_iterator first_token_iter;
+static shunting_token_t shunt;
 
-static void handle_operator(const LexerToken_t& tok);
+static void handle_operator(const LexerToken_t& tok, std::vector<LexerToken_t>::const_iterator& token_iter);
 static const bool is_operator(const LexerToken_t& tok);
 static const bool is_literal_type(const LexerToken_t& tok);
 
-static const int state_first_token = 0;
-static const int state_default     = 1;
-static const int state_local_decl  = 2;
-static const int state_builtin_ref = 3;
-static const int state_global_ref  = 4;
+static const bool is_valid_unary_operator(
+        const LexerToken_t& token, 
+        std::vector<LexerToken_t>::const_iterator& token_iter);
+
+static const bool is_valid_binary_operator(
+        const LexerToken_t& token, 
+        std::vector<LexerToken_t>::const_iterator& token_iter);
+
+static const int state_first_token  = 0;
+static const int state_default      = 1;
+static const int state_local_decl   = 2;
+static const int state_builtin_ref  = 3;
+static const int state_global_ref   = 4;
+static const int state_control_flow = 5; // currently just 'for'
 
 static int state_current = state_default;
 
@@ -136,52 +149,64 @@ bool parse_shunt(
 
         // special operator. can be unary or binary
         case LexerToken_Syntax_Minus:
-            {
-                const LexerToken_t& previous_token = *(token_iter - 1);
-                if(
-                        token_iter == first_token_iter ||
-                        is_operator(previous_token)    ||
-                        previous_token.type == LexerToken_Syntax_LParen) {
-                    shunt.type  = shunting_token_type_unary_operator;
-                    shunt.token = token;
-                    shunt.token.type = LexerToken_Syntax_UnaryNegative;
-                    work_stack.push(shunt);
-                    return false;
-                }
-                else {
-                    if(
-                            is_literal_type(previous_token)                 || 
-                            previous_token.type == LexerToken_Syntax_RParen ||
-                            previous_token.type == LexerToken_VarName) {
-                        shunt.type = shunting_token_type_operator;
-                        shunt.token = token;
-                        work_stack.push(shunt);
-                        return false;
-                    }
-                }
+            if(is_valid_unary_operator(token, token_iter)) {
+                // unary token
+                shunt.type       = shunting_token_type_unary_operator;
+                shunt.token      = token;
+                shunt.token.type = LexerToken_Syntax_UnaryNegative;
+                work_stack.push(shunt);
+                return false;
+            } 
+            else if(is_valid_binary_operator(token, token_iter)) {
+                // binary operator
+                shunt.type  = shunting_token_type_operator;
+                shunt.token = token;
+                work_stack.push(shunt);
+                return false;
+            } 
+            else {
+                // otherwise, idk what this is
+                throw_parse_error(
+                    "unknown parse error around '-'", filename, src, token.start, token);
             }
             break;
 
         // list of operators. precedence determined by precedence_table above
         case LexerToken_Syntax_Not:    // always unary
         case LexerToken_Syntax_Invert: // ...
-        case LexerToken_Syntax_Plus:
-        case LexerToken_Syntax_Equiv:
-        case LexerToken_Syntax_NotEquiv:
-        case LexerToken_Syntax_Ampersand:
-        case LexerToken_Syntax_Caret:
-        case LexerToken_Syntax_Pipe:
+            if(!is_valid_unary_operator(token, token_iter)) {
+                // throw error, must be valid unary operator
+                throw_parse_error("operator '" + lexer_token_value(token, src) + "' must be unary", filename, src, token.start, token);
+            }
 
+
+
+            break;
+
+        // always binary
+        case LexerToken_Syntax_Plus:      // +
+        case LexerToken_Syntax_Equiv:     // ==
+        case LexerToken_Syntax_NotEquiv:  // !=
+        case LexerToken_Syntax_Ampersand: // &
+        case LexerToken_Syntax_Caret:     // ^
+        case LexerToken_Syntax_Pipe:      // |
+            if(token_iter == first_token_iter) {
+                // cant be first token in expression
+                throw_parse_error(
+                    "operator [" + lexer_token_name_and_value(token, src) + "] cannot be first token in expression", 
+                    filename, src, first_token_iter->start, token);
+            }
             return false;
 
-        // special type of operator, must be local references before and after
+        // special type of operator, must be local reference or varname before and after
         case LexerToken_Syntax_Period:
             if(token_iter == first_token_iter) {
                 // throw error. cant be first token in expression
                 return false;
             }
             else {
-
+                handle_operator(token, token_iter);
+                return false;
             }
             break;
 
@@ -194,6 +219,18 @@ bool parse_shunt(
             shunt.token = token;
             output_queue.push_back(shunt);
             return false;
+
+        // lexer sees builtins as variable names
+        case LexerToken_VarName: {
+            auto builtin_iter = native_function_table.find(lexer_token_value(token, src));
+            if(builtin_iter != native_function_table.end()) {
+
+            }
+
+
+
+            break;
+        }
 
         default:
             throw_parse_error("unknown token type in parse_shunt : " + lexer_token_name_and_value(token, src), 
@@ -208,10 +245,30 @@ bool parse_shunt(
         std::cout << "local-decl, builtin-ref, or global-ref\n";
         token_iter++;
         return false;
-
     }
 
 
+}
+
+static const bool is_valid_unary_operator(
+        const LexerToken_t& token, 
+        std::vector<LexerToken_t>::const_iterator& token_iter) {
+    return
+        token_iter == first_token_iter ||
+        is_operator(*(token_iter - 1)) ||
+        (*(token_iter - 1)).type == LexerToken_Syntax_LParen;
+}
+
+static const bool is_valid_binary_operator(
+        const LexerToken_t& token, 
+        std::vector<LexerToken_t>::const_iterator& token_iter) {
+    return
+        token_iter != first_token_iter &&
+        (
+            is_literal_type(*(token_iter - 1))                   || 
+            (*(token_iter - 1)).type == LexerToken_Syntax_RParen ||
+            (*(token_iter - 1)).type == LexerToken_VarName
+        );
 }
 
 static const bool is_literal_type(const LexerToken_t& tok) {
@@ -226,10 +283,30 @@ static const bool is_literal_type(const LexerToken_t& tok) {
 
 static const bool is_operator(const LexerToken_t& tok) {
     switch(tok.type) {
-    
+    case LexerToken_Syntax_Period:
+    case LexerToken_Syntax_Invert:
+    case LexerToken_Syntax_Not:
+    case LexerToken_Syntax_UnaryNegative:
+    case LexerToken_Syntax_Plus:
+    case LexerToken_Syntax_Minus:
+    case LexerToken_Syntax_Equiv:
+    case LexerToken_Syntax_NotEquiv:
+    case LexerToken_Syntax_Ampersand:
+    case LexerToken_Syntax_Caret:
+    case LexerToken_Syntax_Pipe:
+    case LexerToken_Syntax_Assign:
+        return true;
+    default:
+        return false;
     }
 }
 
-static void handle_operator(const LexerToken_t& tok) {
+static void handle_operator(
+        const LexerToken_t& tok, 
+        std::vector<LexerToken_t>::const_iterator& token_iter)
+{
+
+
+
     return;
 }

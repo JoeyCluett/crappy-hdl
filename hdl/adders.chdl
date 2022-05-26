@@ -20,7 +20,7 @@ start
 
     for(local i; {0, width })
     start
-        push(full_adder());
+        push(adders, full_adder());
         adders[$].cin = current_cin;
         adders[$].a   = a[i];
         adders[$].b   = b[i];

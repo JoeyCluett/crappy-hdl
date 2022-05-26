@@ -11,6 +11,8 @@ enum Opcode_t : uint8_t {
     //      0x00 : long
     //      0x01 : ulong
     //      0x02 : string
+    //      0x03 : any (used for references to io)
+    //      0x04 : vector
     //
     Opcode_DECLARE_NEW_LOCAL =  0, //     [1x 0x00] [1x datatype] [1x name table index], 3 bytes
     Opcode_PUSH_LOCAL        =  1, //     [1x 0x01] [1x name table index], 2 bytes
@@ -38,6 +40,7 @@ enum Opcode_t : uint8_t {
     //      0x00 : cmpeq
     //      0x01 : cmpneq
     //      0x02 : decoder
+    //      0x03 : match
     //
     Opcode_MODULE_BUILTIN    = 17, // [1x 0x11] [1x builtin index], 2 bytes
 
@@ -54,6 +57,10 @@ enum Opcode_t : uint8_t {
     Opcode_MODULE_BUILTIN_EXT    = 26, // [1x 0x1A] [2x builtin index], 3 bytes
 
     Opcode_RANGE_SENTINAL = 27,
+
+    Opcode_PUSH_STRING_LITERAL = 28,
+    Opcode_PUSH_INT_LITERAL    = 29,
+    Opcode_PUSH_UINT_LITERAL   = 30,
 
 };
 
