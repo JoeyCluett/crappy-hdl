@@ -241,26 +241,26 @@ static void handle_port(
         hdl_module_t* module_ptr,
         const std::string& filename) {
 
-    {
-        const char* io_type_str[] = {
-            "input",
-            "output"
-        };
-
-        const char* type_str[] = {
-            "bit",
-            "bitvector_const",
-            "bitvector_local",
-            "bitvector_global",
-        };
-
-        const std::string str_port_name = lexer_token_value(port_name, src);
-
-        std::cout << "handle_port:\n";
-        std::cout << "    port name : " << str_port_name << "\n";
-        std::cout << "    I/O type  : " << io_type_str[port_io_type] << "\n";
-        std::cout << "    port type : " << type_str[port_type] << "\n\n" << std::flush;
-    }
+//    {
+//        const char* io_type_str[] = {
+//            "input",
+//            "output"
+//        };
+//
+//        const char* type_str[] = {
+//            "bit",
+//            "bitvector_const",
+//            "bitvector_local",
+//            "bitvector_global",
+//        };
+//
+//        const std::string str_port_name = lexer_token_value(port_name, src);
+//
+//        std::cout << "handle_port:\n";
+//        std::cout << "    port name : " << str_port_name << "\n";
+//        std::cout << "    I/O type  : " << io_type_str[port_io_type] << "\n";
+//        std::cout << "    port type : " << type_str[port_type] << "\n\n" << std::flush;
+//    }
 
     module_port_t mport;
     mport.io_type = port_io_type; // input, output

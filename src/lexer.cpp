@@ -40,6 +40,7 @@ std::vector<LexerToken_t>
         { '^', { LexerToken_Syntax_Caret    , false }}, // ^   bitwise XOR
         { '+', { LexerToken_Syntax_Plus     , false }}, // +   addition
         { '-', { LexerToken_Syntax_Minus    , false }}, // -   subtraction
+        { '/', { LexerToken_Syntax_Divide   , false }},
         //{ '@', { LexerToken_Syntax_At       , false }}, // this is syntax but it plays a much larger role than other syntax
     };
 

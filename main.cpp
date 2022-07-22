@@ -16,11 +16,12 @@ int main(int argc, char* argv[]) {
 
     //std::string filename = "hdl/toplevel.chdl";
     std::string filename = "hdl/rv-decoder.chdl";
+    //std::string filename = "hdl/simplest-module.chdl";
 
     try {
         auto src    = read_hdl_file_contents(filename);
         auto tokens = lexical_analyze(src, filename);
-        auto* rt    = parse_analyze(tokens, src, filename);
+        auto* rt    = parse(tokens, src, filename);
 
         hdl_runtime_print(std::cout, rt);
 

@@ -22,8 +22,10 @@ bool parse_arg_list(
 
     switch(state_current) {
     case state_expect_lparen:
+        //std::cout << "parse_arg_list\n\tstate: state_expect_lparen\n\ttoken: " << lexer_token_value(token, src) << std::endl;
+
         if(token.type == LexerToken_Syntax_LParen) {
-            state_current = state_varname;
+            state_current = state_varname_or_void;
             token_iter++;
             return false;
         }
@@ -35,6 +37,8 @@ bool parse_arg_list(
         break;
 
     case state_varname_or_void:
+        //std::cout << "parse_arg_list\n\tstate: state_varname_or_void\n\ttoken: " << lexer_token_value(token, src) << std::endl;
+
         if(token.type == LexerToken_VarName) {
             state_current = state_varname;
             // dont advance token iterator b/c state_varname expects this token to be a VarName
@@ -53,6 +57,8 @@ bool parse_arg_list(
         break;
 
     case state_varname:
+        //std::cout << "parse_arg_list\n\tstate: state_varname\n\ttoken: " << lexer_token_value(token, src) << std::endl;
+
         if(token.type == LexerToken_VarName) {
 
             int error;

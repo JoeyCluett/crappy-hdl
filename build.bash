@@ -12,7 +12,7 @@ RST=`tput sgr0`
 #
 # additional project folders specified here:
 #
-SRC_FOLDERS=( src src/parse-fsm src/parse-fsm/module src/ir )
+SRC_FOLDERS=( src src/parse-fsm src/parse-fsm/module src/parse-fsm/module/expr src/ir )
 
 COMPILER="g++"
 STDOPTS=""

@@ -57,6 +57,11 @@ struct hdl_module_t {
 
     std::vector<std::string> string_array;
     std::vector<uint8_t> byte_code;
+
+    struct {
+        int scope_depth;
+    } parse;
+
 };
 
 const int module_arg_error_no_error                = 0;

@@ -40,6 +40,7 @@ const std::string lexer_token_name(int token_type) {
     case LexerToken_Syntax_LBrace: return "Syntax:leftbrace";
     case LexerToken_Syntax_RBrace: return "Syntax:rightbrace";
     case LexerToken_Syntax_At:     return "Syntax:at";
+    case LexerToken_Syntax_Divide: return "Syntax:divide";
 
     case LexerToken_Syntax_Invert:   return "Syntax:invert"; // ~
     case LexerToken_Syntax_GrThan:   return "Syntax:greaterthan";

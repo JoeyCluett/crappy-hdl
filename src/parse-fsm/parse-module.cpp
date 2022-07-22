@@ -42,6 +42,8 @@ bool parse_module(
             module_ptr->n_in_ports    = 0ul;
             module_ptr->n_out_ports   = 0ul;
 
+            module_ptr->parse.scope_depth = 0;
+
             // add module to runtime
             const int result = hdl_runtime_add_module(rt, module_ptr);
             if(result == HDL_ADD_MODULE_ALREADY_EXISTS) {

@@ -8,7 +8,7 @@
 
 #include <vector>
 
-HDL_Runtime_t* parse_analyze(
+HDL_Runtime_t* parse(
         const std::vector<LexerToken_t>& tokens, 
         const std::vector<char>& src,
         const std::string& filename);

@@ -1,8 +1,11 @@
 #pragma once
 
+#include "parse-shunt.h"
+
 #include <vector>
 #include <string>
 #include <map>
+#include <stack>
 
 #include <src/error-util.h>
 #include <src/hdl-module.h>

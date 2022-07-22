@@ -57,9 +57,10 @@ const int LexerToken_Syntax_Caret     = NVALUE + 24; // ^   bitwise XOR
 
 const int LexerToken_Syntax_Plus      = NVALUE + 25; // +
 const int LexerToken_Syntax_Minus     = NVALUE + 26; // -   also a unary but the lexer doesnt know that
+const int LexerToken_Syntax_Divide    = NVALUE + 27; // /
 
 #undef NVALUE
-#define NVALUE (LexerToken_Syntax_Minus + 1)
+#define NVALUE (LexerToken_Syntax_Divide + 1)
 
 const int LexerToken_NumberDec        = NVALUE + 0; // 0, 1, 2, 2321212
 const int LexerToken_NumberHex        = NVALUE + 1; // 0xff, 0x1234
@@ -70,8 +71,6 @@ const int LexerToken_StringLiteral    = NVALUE + 3;
 #define NVALUE (LexerToken_StringLiteral + 1)
 
 const int LexerToken_Syntax_UnaryNegative = NVALUE + 0;
-
-
 
 struct LexerToken_t {
     int type;

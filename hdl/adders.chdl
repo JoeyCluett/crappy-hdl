@@ -18,8 +18,7 @@ start
     local adders      = vector();
     local current_cin = cin;
 
-    for(local i; {0, width })
-    start
+    for(local i : integer; 0; width) start
         push(adders, full_adder());
         adders[$].cin = current_cin;
         adders[$].a   = a[i];

@@ -1,51 +1,51 @@
 
-module RV_Unmarshaller(void)
-    in_ports  : inst[32];
-
-    out_ports : opcode[7], rs1[5], rs2[5], rd[5];
-    out_ports : funct3[3], funct[7];
-    out_ports : I_imm[32], S_imm[32], B_imm[32], U_imm[32], J_imm[32];
-start
-
-    opcode[{ 0 : 6 }] = inst[{  0 :  6 }];
-    rs1[   { 0 : 4 }] = inst[{ 15 : 19 }];
-    rs2[   { 0 : 4 }] = inst[{ 20 : 24 }];
-    rd[    { 0 : 4 }] = inst[{  7 : 11 }];
-    funct3[{ 0 : 2 }] = inst[{ 12 : 14 }];
-    funct7[{ 0 : 6 }] = inst[{ 25 : 31 }];
-
-    //
-    // stitch together all the different types of immediates
-    //
-    I_imm[0]           = inst[20];
-    I_imm[{  1 :  4 }] = inst[{ 21 : 24 }];
-    I_imm[{  5 : 10 }] = inst[{ 25 : 30 }];
-    I_imm[{ 11 : 31 }] = inst[31];
-
-    S_imm[0]           = inst[20];
-    S_imm[{ 1 : 4 }]   = inst[{ 8 : 11 }];
-    S_imm[{ 5 : 10 }]  = inst[{ 25 : 30 }];
-    S_imm[{ 11 : 31 }] = inst[31];
-
-    B_imm[0]           = @'0';
-    B_imm[{ 1 : 4 }]   = inst[{ 8 : 11 }];
-    B_imm[{ 5 : 10 }]  = inst[{ 25 : 30 }];
-    B_imm[11]          = inst[7];
-    B_imm[{ 12 : 31 }] = inst[{ 31 }];
-
-    U_imm[{ 0 : 11 }]  = @'0b0000_0000_0000';
-    U_imm[{ 12 : 19 }] = inst[{ 12 : 19 }];
-    U_imm[{ 20 : 30 }] = inst[{ 20 : 30 }];
-    U_imm[{ 31 }]      = inst[{ 31 }];
-
-    J_imm[0]           = @'0';
-    J_imm[{ 1 : 4 }]   = inst[{ 21 : 24 }];
-    J_imm[{ 5 : 10 }]  = inst[{ 25 : 30 }];
-    J_imm[11]          = inst[20]
-    J_imm[{ 12 : 19 }] = inst[{ 12 : 19 }];
-    J_imm[{ 20 : 31 }] = inst[{ 31 }];
-
-end
+// module RV_Unmarshaller(void)
+//     in_ports  : inst[32];
+// 
+//     out_ports : opcode[7], rs1[5], rs2[5], rd[5];
+//     out_ports : funct3[3], funct[7];
+//     out_ports : I_imm[32], S_imm[32], B_imm[32], U_imm[32], J_imm[32];
+// start
+// 
+//     opcode[{ 0 : 6 }] = inst[{  0 :  6 }];
+//     rs1[   { 0 : 4 }] = inst[{ 15 : 19 }];
+//     rs2[   { 0 : 4 }] = inst[{ 20 : 24 }];
+//     rd[    { 0 : 4 }] = inst[{  7 : 11 }];
+//     funct3[{ 0 : 2 }] = inst[{ 12 : 14 }];
+//     funct7[{ 0 : 6 }] = inst[{ 25 : 31 }];
+// 
+//     //
+//     // stitch together all the different types of immediates
+//     //
+//     I_imm[0]           = inst[20];
+//     I_imm[{  1 :  4 }] = inst[{ 21 : 24 }];
+//     I_imm[{  5 : 10 }] = inst[{ 25 : 30 }];
+//     I_imm[{ 11 : 31 }] = inst[31];
+// 
+//     S_imm[0]           = inst[20];
+//     S_imm[{ 1 : 4 }]   = inst[{ 8 : 11 }];
+//     S_imm[{ 5 : 10 }]  = inst[{ 25 : 30 }];
+//     S_imm[{ 11 : 31 }] = inst[31];
+// 
+//     B_imm[0]           = @'0';
+//     B_imm[{ 1 : 4 }]   = inst[{ 8 : 11 }];
+//     B_imm[{ 5 : 10 }]  = inst[{ 25 : 30 }];
+//     B_imm[11]          = inst[7];
+//     B_imm[{ 12 : 31 }] = inst[{ 31 }];
+// 
+//     U_imm[{ 0 : 11 }]  = @'0b0000_0000_0000';
+//     U_imm[{ 12 : 19 }] = inst[{ 12 : 19 }];
+//     U_imm[{ 20 : 30 }] = inst[{ 20 : 30 }];
+//     U_imm[{ 31 }]      = inst[{ 31 }];
+// 
+//     J_imm[0]           = @'0';
+//     J_imm[{ 1 : 4 }]   = inst[{ 21 : 24 }];
+//     J_imm[{ 5 : 10 }]  = inst[{ 25 : 30 }];
+//     J_imm[11]          = inst[20]
+//     J_imm[{ 12 : 19 }] = inst[{ 12 : 19 }];
+//     J_imm[{ 20 : 31 }] = inst[{ 31 }];
+// 
+// end
 
 module RV_Decoder(void)
     in_ports: inst[32];
@@ -62,7 +62,7 @@ module RV_Decoder(void)
     out_ports: SB, SH, SW;
     out_ports: ADDI, SLTI, SLTIU, XORI, ORI, ANDI, SLLI, SRLI, SRAI;
     out_ports: ADD, SUB, SLL, SLT, SLTU, XOR, SRL, SRA, OR, AND
-
+ 
     out_ports: ECALL;
 
     out_ports: IGNORED;
@@ -84,7 +84,7 @@ start
     rd  = Unm.rd;
 
     local opc7 = builtin.match(
-            0b0110111,
+            0b0110111, // output index 0
             0b0010111,
             0b1101111,
             0b1100111,
@@ -94,7 +94,8 @@ start
             0b0010011,
             0b0110011,
             0b0001111,
-            0b1110011, Unm.opcode);
+            0b1110011, //  output index 10
+            Unm.opcode); // input to match against
 
     local opc_0110111 = opc7.output[ 0]; // LUI
     local opc_0010111 = opc7.output[ 1]; // AUIPC
@@ -133,52 +134,52 @@ start
     // proper combination of above comparison outputs
     //
 
-    local LUI   = opc_0110111;
-    local AUIPC = opc_0010111;
-    local JAL   = opc_1101111;
-    local JALR  = opc_1100111 & fn3_000;
+    LUI   = opc_0110111;
+    AUIPC = opc_0010111;
+    JAL   = opc_1101111;
+    JALR  = opc_1100111 & fn3_000;
 
-    local BEQ   = opc_1100011 & fn3_000;
-    local BNE   = opc_1100011 & fn3_001;
-    local BLT   = opc_1100011 & fn3_100;
-    local BGE   = opc_1100011 & fn3_101;
-    local BLTU  = opc_1100011 & fn3_110;
-    local BGEU  = opc_1100011 & fn3_111;
+    BEQ   = opc_1100011 & fn3_000;
+    BNE   = opc_1100011 & fn3_001;
+    BLT   = opc_1100011 & fn3_100;
+    BGE   = opc_1100011 & fn3_101;
+    BLTU  = opc_1100011 & fn3_110;
+    BGEU  = opc_1100011 & fn3_111;
 
-    local LB    = opc_0000011 & fn3_000;
-    local LH    = opc_0000011 & fn3_001;
-    local LW    = opc_0000011 & fn3_010;
-    local LBU   = opc_0000011 & fn3_100;
-    local LHU   = opc_0000011 & fn3_101;
+    LB    = opc_0000011 & fn3_000;
+    LH    = opc_0000011 & fn3_001;
+    LW    = opc_0000011 & fn3_010;
+    LBU   = opc_0000011 & fn3_100;
+    LHU   = opc_0000011 & fn3_101;
 
-    local SB    = opc_0100011 & fn3_000;
-    local SH    = opc_0100011 & fn3_001;
-    local SW    = opc_0100011 & fn3_010;
+    SB    = opc_0100011 & fn3_000;
+    SH    = opc_0100011 & fn3_001;
+    SW    = opc_0100011 & fn3_010;
 
-    local ADDI  = opc_0010011 & fn3_000;
-    local SLTI  = opc_0010011 & fn3_010;
-    local SLTIU = opc_0010011 & fn3_011;
-    local XORI  = opc_0010011 & fn3_100;
-    local ORI   = opc_0010011 & fn3_110;
-    local ANDI  = opc_0010011 & fn3_111;
-    local SLLI  = opc_0010011 & fn3_001 & fn7_0000000;
-    local SRLI  = opc_0010011 & fn3_101 & fn7_0000000;
-    local SRAI  = opc_0010011 & fn3_101 & fn7_0100000;
+    ADDI  = opc_0010011 & fn3_000;
+    SLTI  = opc_0010011 & fn3_010;
+    SLTIU = opc_0010011 & fn3_011;
+    XORI  = opc_0010011 & fn3_100;
+    ORI   = opc_0010011 & fn3_110;
+    ANDI  = opc_0010011 & fn3_111;
+    SLLI  = opc_0010011 & fn3_001 & fn7_0000000;
+    SRLI  = opc_0010011 & fn3_101 & fn7_0000000;
+    SRAI  = opc_0010011 & fn3_101 & fn7_0100000;
 
-    local ADD   = opc_0110011 & fn3_000 & fn7_0000000;
-    local SUB   = opc_0110011 & fn3_000 & fn7_0100000;
-    local SLL   = opc_0110011 & fn3_001 & fn7_0000000;
-    local SLT   = opc_0110011 & fn3_010 & fn7_0000000;
-    local SLTU  = opc_0110011 & fn3_011 & fn7_0000000;
-    local XOR   = opc_0110011 & fn3_100 & fn7_0000000;
-    local SRL   = opc_0110011 & fn3_101 & fn7_0000000;
-    local SRA   = opc_0110011 & fn3_101 & fn7_0100000;
-    local OR    = opc_0110011 & fn3_110 & fn7_0000000;
-    local AND   = opc_0110011 & fn3_111 & fn7_0000000;
+    ADD   = opc_0110011 & fn3_000 & fn7_0000000;
+    SUB   = opc_0110011 & fn3_000 & fn7_0100000;
+    SLL   = opc_0110011 & fn3_001 & fn7_0000000;
+    SLT   = opc_0110011 & fn3_010 & fn7_0000000;
+    SLTU  = opc_0110011 & fn3_011 & fn7_0000000;
+    XOR   = opc_0110011 & fn3_100 & fn7_0000000;
+    SRL   = opc_0110011 & fn3_101 & fn7_0000000;
+    SRA   = opc_0110011 & fn3_101 & fn7_0100000;
+    OR    = opc_0110011 & fn3_110 & fn7_0000000;
+    AND   = opc_0110011 & fn3_111 & fn7_0000000;
 
-    local ECALL = fn_ECALL.output;
+    ECALL = fn_ECALL.output;
 
-    local IGNORED = !(
+    IGNORED = !(
             LUI | AUIPC | JAL | JALR | BEQ | BNE | BLT | 
             BGE | BLTU | BGEU | LB | LH | LW | LBU | 
             LHU | SB | SH | SW | ADDI | SLTI | SLTIU | 
@@ -187,3 +188,5 @@ start
             OR | AND | ECALL);
 
 end
+
+

@@ -13,13 +13,6 @@
 #include <src/hdl-variant.h>
 #include <src/lexical-token.h>
 
-
-static const std::unordered_set<const std::string> builtin_module_types = {
-    { "cmpeq" },
-    { "cmpneq" },
-    
-};
-
 static const int state_builtin_kw  = 0; // 'builtin'.MODULE_TYPE(
 static const int state_dot         = 1; // builtin'.'MODULE_TYPE(
 static const int state_module_name = 2; // builtin.'MODULE_TYPE'(

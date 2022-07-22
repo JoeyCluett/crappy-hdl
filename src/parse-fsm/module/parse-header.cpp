@@ -30,7 +30,7 @@ bool parse_module_header(
         const std::string& filename,
         hdl_module_t* module_ptr) {
 
-    std::cout << "parse_module_header : " << lexer_token_name_and_value(token, src) << std::endl;
+    //std::cout << "parse_module_header : " << lexer_token_name_and_value(token, src) << std::endl;
 
     switch(state_current) {
     case state_default:
