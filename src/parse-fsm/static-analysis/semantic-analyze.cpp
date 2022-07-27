@@ -1,4 +1,4 @@
-#include "parse-analyze.h"
+#include "semantic-analyze.h"
 
 #include <iostream>
 #include <vector>
@@ -15,28 +15,22 @@
 #include <src/parse-fsm/parse-util.h>
 #include <src/parse-fsm/module/expr/parse-shunt.h>
 
-static const unsigned int analyze_flag_none          = (1 << 0);
-static const unsigned int analyze_flag_temporary     = (1 << 1);
-static const unsigned int analyze_flag_token         = (1 << 2);
-static const unsigned int analyze_flag_literal       = (1 << 3);
-static const unsigned int analyze_flag_local         = (1 << 4); // variable references
-static const unsigned int analyze_flag_unsigned      = (1 << 5); // integer subtype
-static const unsigned int analyze_flag_signed        = (1 << 6); // integer subtype
-static const unsigned int analyze_flag_string        = (1 << 7);
-static const unsigned int analyze_flag_bitliteral    = (1 << 8);
-static const unsigned int analyze_flag_field_ref     = (1 << 9);
-static const unsigned int analyze_flag_module_out    = (1 << 10);
-static const unsigned int analyze_flag_module_in     = (1 << 11);
-static const unsigned int analyze_flag_module_bit    = (1 << 12);
-static const unsigned int analyze_flag_module_bitvec = (1 << 13);
-static const unsigned int analyze_flag_builtin_ref   = (1 << 14);
+const uint32_t analyze_flag_temporary = (1u << 0u);
+const uint32_t analyze_flag_integer   = (1u << 1u);
+const uint32_t analyze_flag_signed    = (1u << 2u);
+const uint32_t analyze_flag_unsigned  = (1u << 3u);
+const uint32_t analyze_flag_string    = (1u << 4u);
+const uint32_t analyze_flag_module_input_bit  = (1u << 5u);
+const uint32_t analyze_flag_module_input_vec  = (1u << 6u);
+const uint32_t analyze_flag_module_output_bit = (1u << 7u);
+const uint32_t analyze_flag_module_output_vec = (1u << 8u);
+const uint32_t analuze_flag_range_object    = (1u << 9u);
+const uint32_t analyze_flag_index_specifier = (1u << 10u);
 
 struct analyze_info_t {
-    int flags;
+    uint32_t flags;
     shunting_token_t stok;
 };
-
-static const bool parse_analyze_is_integer(const int flags);
 
 static const bool parse_analyze_eval_local_field(
         HDL_Runtime_t* rt, 
@@ -47,7 +41,7 @@ static const bool parse_analyze_eval_local_field(
         std::map<std::string, hdl_module_t*>& local_modules,
         std::stack<analyze_info_t>& stack);
 
-void parse_analyze(
+void semantic_analyze(
         HDL_Runtime_t* rt,
         hdl_module_t* module_ptr,
         std::vector<shunting_token_t>& output_queue, 
@@ -55,6 +49,9 @@ void parse_analyze(
         const std::vector<char>& src,
         const std::string& filename) {
 
+    return;
+
+/*
     std::stack<analyze_info_t> stack;
     std::map<std::string, hdl_module_t*> local_modules; // local name, module pointer
 
@@ -208,12 +205,9 @@ void parse_analyze(
 
         }
     }
-
+*/
 }
 
-static const bool parse_analyze_is_integer(const int flags) {
-    return flags & (analyze_flag_signed | analyze_flag_unsigned);
-}
 
 static const bool parse_analyze_eval_local_field(
         HDL_Runtime_t* rt, 
@@ -223,11 +217,14 @@ static const bool parse_analyze_eval_local_field(
         std::map<std::string, hdl_module_t*>& local_modules,
         std::stack<analyze_info_t>& stack) {
 
+    return false;
+
     //
 
+/*
     auto module_iter = local_modules.find(local_name);
     if(module_iter == local_modules.end()) {
-        
+
     }
 
     auto field_iter = module_iter->second->module_io_port_interface.find(field_name);
@@ -243,6 +240,7 @@ static const bool parse_analyze_eval_local_field(
 
     if(module_port.io_type == module_port_input) { _ai.flags |= analyze_flag_module_in;
     } else {                                       _ai.flags |= analyze_flag_module_out; }
+*/
 
 }
 

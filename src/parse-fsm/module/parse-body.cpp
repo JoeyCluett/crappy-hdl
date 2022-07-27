@@ -17,8 +17,13 @@ static const int state_expr_default = 2;
 
 static int state_current = state_expect_start;
 
-static std::stack<shunting_token_t> work_stack;
+static std::vector<shunting_token_t> work_stack;
 static std::vector<shunting_token_t> output_queue;
+
+static void parse_module_error_print_wip(
+        std::vector<shunting_token_t>& work_stack, 
+        std::vector<shunting_token_t>& output_queue,
+        const std::vector<char>& src);
 
 static bool parse_module_body_default_state(
         HDL_Runtime_t* rt,
@@ -36,8 +41,13 @@ bool parse_module_body(
         const std::string& filename,
         hdl_module_t* module_ptr) {
 
+    parse_module_error_print_wip(work_stack, output_queue, src);
+    std::cout << "\n    token: " << lexer_token_name_and_value(token, src) << std::endl;
+
+
     switch(state_current) {
     case state_expect_start:
+        //std::cout << "parse_module_body : state_expect_start\n" << std::flush;
         if(token.type == LexerToken_KW_start) {
             state_current = state_default;
             token_iter++;
@@ -50,18 +60,20 @@ bool parse_module_body(
         break;
 
     case state_default:
+        //std::cout << "parse_module_body : state_default\n" << std::flush;
         return parse_module_body_default_state(rt, token, token_iter, src, filename, module_ptr);
 
     case state_expr_default:
+        //std::cout << "parse_module_body : state_expr_default\n" << std::flush;
         if(parse_shunt(rt, token, token_iter, src, filename, module_ptr, work_stack, output_queue, shunt_flag_normal)) {
             state_current = state_default;
         }
+        return false;
         break;
 
     default:
         break; // TODO : catch internal error
     }
-
 
 }
 
@@ -73,6 +85,8 @@ static bool parse_module_body_default_state(
         const std::string& filename,
         hdl_module_t* module_ptr) {
 
+    //std::cout << "    parse_module_body_default_state\n" << std::flush;
+    
     switch(token.type) {
     case LexerToken_KW_end:
         // check scope depth first
@@ -83,6 +97,7 @@ static bool parse_module_body_default_state(
         }
         else {
             module_ptr->parse.scope_depth--;
+            token_iter++;
             // TODO : add to output queue
             return false;
         }
@@ -95,15 +110,39 @@ static bool parse_module_body_default_state(
 
     case LexerToken_VarName:
         state_current = state_expr_default;
-        while(!work_stack.empty())
-            work_stack.pop();
+        work_stack.clear();
         output_queue.clear();
         //token_iter++;
         return false;
 
     default:
         // TODO : error?
-        token_iter++;
+        //token_iter++;
+        throw_parse_error(
+                "Unknown token [" + lexer_token_name_and_value(token, src) + "]", 
+                filename, src, token.start, token);
         break;
     }
+}
+
+static void parse_module_error_print_wip(
+        std::vector<shunting_token_t>& work_stack, 
+        std::vector<shunting_token_t>& output_queue,
+        const std::vector<char>& src) {
+
+    //
+
+    std::cout << "Output Queue {\n";    
+    for(auto& st : output_queue) {
+        std::cout << "    " << lexer_token_name_and_value(st.token, src) << std::endl;
+    }
+    std::cout << "}\n" << std::flush;
+
+    std::cout << "Work Stack {\n";
+    for(auto& st : work_stack) {
+        std::cout << "    " << lexer_token_name_and_value(st.token, src) << std::endl;
+    }
+    std::cout << "}\n";
+    std::cout << std::flush;
+
 }

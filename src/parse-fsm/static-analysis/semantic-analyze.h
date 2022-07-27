@@ -15,7 +15,7 @@
 #include <src/parse-fsm/parse-util.h>
 #include <src/parse-fsm/module/expr/parse-shunt.h>
 
-void parse_shunt_push_output_queue(
+void semantic_analyze(
         HDL_Runtime_t* rt,
         hdl_module_t* module_ptr,
         std::vector<shunting_token_t>& output_queue, 

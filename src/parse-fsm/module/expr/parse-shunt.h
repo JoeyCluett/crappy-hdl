@@ -16,7 +16,7 @@ enum shunting_token_type_t {
     shunting_token_type_field_reference  , // tokenized as variable name, parser figures out if its actually a field reference
     shunting_token_type_binary_operator  , // binary operator
     shunting_token_type_unary_operator   , // unary operator (one of '-', '!', '~')
-    shunting_token_type_function_sentinal, // start of function call, this may be split out into multiple sub-types
+    shunting_token_type_function_sentinal, // start of function call
     shunting_token_type_global_reference , // like type_local above, but this refers to a global type
     shunting_token_type_constant         , // one of constant numeric types
     shunting_token_type_string           , // string constant
@@ -29,6 +29,7 @@ enum shunting_token_type_t {
     shunting_token_type_rrange_sentinal  , // }
     shunting_token_type_lindex_sentinal  , // [
     shunting_token_type_rindex_sentinal  , // ]
+    shunting_token_type_bitliteral       , // @'010....'
 };
 
 const int shunt_flag_normal       = 1;
@@ -41,6 +42,7 @@ struct shunting_token_t {
     union {
         int function_ident;
         int builtin_ident;
+        hdl_module_t* module_ptr;
     };
 
 };
@@ -52,7 +54,7 @@ bool parse_shunt(
         const std::vector<char>& src,
         const std::string& filename,
         hdl_module_t* module_ptr,
-        std::stack<shunting_token_t>& work_stack,
+        std::vector<shunting_token_t>& work_stack,
         std::vector<shunting_token_t>& output_queue,
         const int flags);
 

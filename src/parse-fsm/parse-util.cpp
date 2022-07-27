@@ -72,6 +72,7 @@ const bool parse_util_is_operator(const LexerToken_t& tok) {
     case LexerToken_Syntax_Plus: // +
     case LexerToken_Syntax_Minus: // -
     case LexerToken_Syntax_UnaryNegative: // - (but different from Minus)
+    case LexerToken_Syntax_Assign:
         return true;
     default:
         return false;

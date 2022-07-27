@@ -43,7 +43,7 @@ std::vector<LexerToken_t>
         { '/', { LexerToken_Syntax_Divide   , false }},
         //{ '@', { LexerToken_Syntax_At       , false }}, // this is syntax but it plays a much larger role than other syntax
     };
-
+ 
     const static std::map<std::string, const int> multi_char_syntax = {
         { ">=", LexerToken_Syntax_GrEq     },
         { "<=", LexerToken_Syntax_LsEq     },

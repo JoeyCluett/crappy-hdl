@@ -31,6 +31,8 @@ bool parse_module(
         const std::vector<char>& src,
         const std::string& filename) {
 
+    //std::cout << "parse_module : " << lexer_token_name_and_value(token, src) << "    ";
+
     switch(state_current) {
     case state_expect_module_name:
         //std::cout << "parse-module : state_expect_module_name\n";

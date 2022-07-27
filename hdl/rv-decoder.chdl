@@ -1,192 +1,197 @@
 
-// module RV_Unmarshaller(void)
-//     in_ports  : inst[32];
-// 
-//     out_ports : opcode[7], rs1[5], rs2[5], rd[5];
-//     out_ports : funct3[3], funct[7];
-//     out_ports : I_imm[32], S_imm[32], B_imm[32], U_imm[32], J_imm[32];
-// start
-// 
-//     opcode[{ 0 : 6 }] = inst[{  0 :  6 }];
-//     rs1[   { 0 : 4 }] = inst[{ 15 : 19 }];
-//     rs2[   { 0 : 4 }] = inst[{ 20 : 24 }];
-//     rd[    { 0 : 4 }] = inst[{  7 : 11 }];
-//     funct3[{ 0 : 2 }] = inst[{ 12 : 14 }];
-//     funct7[{ 0 : 6 }] = inst[{ 25 : 31 }];
-// 
-//     //
-//     // stitch together all the different types of immediates
-//     //
-//     I_imm[0]           = inst[20];
-//     I_imm[{  1 :  4 }] = inst[{ 21 : 24 }];
-//     I_imm[{  5 : 10 }] = inst[{ 25 : 30 }];
-//     I_imm[{ 11 : 31 }] = inst[31];
-// 
-//     S_imm[0]           = inst[20];
-//     S_imm[{ 1 : 4 }]   = inst[{ 8 : 11 }];
-//     S_imm[{ 5 : 10 }]  = inst[{ 25 : 30 }];
-//     S_imm[{ 11 : 31 }] = inst[31];
-// 
-//     B_imm[0]           = @'0';
-//     B_imm[{ 1 : 4 }]   = inst[{ 8 : 11 }];
-//     B_imm[{ 5 : 10 }]  = inst[{ 25 : 30 }];
-//     B_imm[11]          = inst[7];
-//     B_imm[{ 12 : 31 }] = inst[{ 31 }];
-// 
-//     U_imm[{ 0 : 11 }]  = @'0b0000_0000_0000';
-//     U_imm[{ 12 : 19 }] = inst[{ 12 : 19 }];
-//     U_imm[{ 20 : 30 }] = inst[{ 20 : 30 }];
-//     U_imm[{ 31 }]      = inst[{ 31 }];
-// 
-//     J_imm[0]           = @'0';
-//     J_imm[{ 1 : 4 }]   = inst[{ 21 : 24 }];
-//     J_imm[{ 5 : 10 }]  = inst[{ 25 : 30 }];
-//     J_imm[11]          = inst[20]
-//     J_imm[{ 12 : 19 }] = inst[{ 12 : 19 }];
-//     J_imm[{ 20 : 31 }] = inst[{ 31 }];
-// 
-// end
+module RV_Unmarshaller(void)
+    in_ports  : inst[32];
 
-module RV_Decoder(void)
-    in_ports: inst[32];
-
-    out_ports: imm32;
-    out_ports: rs1[5], rs2[5], rd[5];
-
-    out_ports: LUI;
-    out_ports: AUIPC;
-    out_ports: JAL;
-    out_ports: JALR;
-    out_ports: BEQ, BNE, BLT, BGE, BLTU, BGEU;
-    out_ports: LB, LH, LW, LBU, LHU;
-    out_ports: SB, SH, SW;
-    out_ports: ADDI, SLTI, SLTIU, XORI, ORI, ANDI, SLLI, SRLI, SRAI;
-    out_ports: ADD, SUB, SLL, SLT, SLTU, XOR, SRL, SRA, OR, AND
- 
-    out_ports: ECALL;
-
-    out_ports: IGNORED;
-
-    //
-    // ignore FENCE, FENCE.I, and EBREAK
-    // ECALL will just jump to a known location in memory (hardcoded for simplicity)
-    // idk if i will implement the CSR instructions
-    // they seem like the meaning of CSRs is highly platform dependent
-    //
-
+    out_ports : opcode[7], rs1[5], rs2[5], rd[5];
+    out_ports : funct3[3], funct[7];
+    out_ports : I_imm[32], S_imm[32], B_imm[32], U_imm[32], J_imm[32];
 start
 
-    local Unm = RV_Unmarshaller();
-    Unm.inst = inst;
+    //opcode[{ 0, 6 }] = inst[{  0,  6 }];
+    opcode[{ 1-1, 3+12-9 }] = inst[{0,6}];
 
-    rs1 = Unm.rs1;
-    rs2 = Unm.rs2;
-    rd  = Unm.rd;
-
-    local opc7 = builtin.match(
-            0b0110111, // output index 0
-            0b0010111,
-            0b1101111,
-            0b1100111,
-            0b1100011,
-            0b0000011,
-            0b0100011,
-            0b0010011,
-            0b0110011,
-            0b0001111,
-            0b1110011, //  output index 10
-            Unm.opcode); // input to match against
-
-    local opc_0110111 = opc7.output[ 0]; // LUI
-    local opc_0010111 = opc7.output[ 1]; // AUIPC
-    local opc_1101111 = opc7.output[ 2]; // JAL
-    local opc_1100111 = opc7.output[ 3]; // JALR
-    local opc_1100011 = opc7.output[ 4]; // BEQ, BNE, BLT, BGE, BLTU, BGEU
-    local opc_0000011 = opc7.output[ 5]; // LB, LH, LW, LBU, LHU
-    local opc_0100011 = opc7.output[ 6]; // SB, SH, SW
-    local opc_0010011 = opc7.output[ 7]; // ADDI, SLTI, SLTIU, XORI, ORI, ANDI, SLLI, SRLI, SRAI
-    local opc_0110011 = opc7.output[ 8]; // ADD, SUB, SLL, SLT, SLTU, XOR, SRL, SRA, OR, AND
-    local opc_0001111 = opc7.output[ 9]; // FENCE, FENCE.I (both ignored, but we still need to decode them)
-    local opc_1110011 = opc7.output[10]; // ECALL, ignored: EBREAK, CSRRW, CSRRS, CSRRC, CSRRWI, CSRRSI, CSRRCI
-
-    local decode_fn3 = builtin.decoder( 8, Unm.funct3 );
-
-    local fn3_000 = decode_fn3.output[0b000]; 
-    local fn3_001 = decode_fn3.output[0b001];
-    local fn3_010 = decode_fn3.output[0b010]; 
-    local fn3_011 = decode_fn3.output[0b011];
-    local fn3_100 = decode_fn3.output[0b100]; 
-    local fn3_101 = decode_fn3.output[0b101];
-    local fn3_110 = decode_fn3.output[0b110]; 
-    local fn3_111 = decode_fn3.output[0b111];
-
-    local fn7 = builtin.match(
-            0b0000000,
-            0b0100000, Unm.funct7);
-
-    local fn7_0000000 = fn7.output[0];
-    local fn7_0100000 = fn7.output[1];
-
-    local fn_ECALL = builtin.cmpeq(0b00000000_00000000_00000000_01110011, 32, inst);
+    rs1[   { 0, 4 }] = inst[{ 15, 19 }];
+    rs2[   { 0, 4 }] = inst[{ 20, 24 }];
+    rd[    { 0, 4 }] = inst[{  7, 11 }];
+    funct3[{ 0, 2 }] = inst[{ 12, 14 }];
+    funct7[{ 0, 6 }] = inst[{ 25, 31 }];
 
     //
-    // define each instruction-out bit as the 
-    // proper combination of above comparison outputs
+    // stitch together all the different types of immediates
     //
+    I_imm[0]           = inst[20];
+    I_imm[{  1,  4 }] = inst[{ 21 , 24 }];
+    I_imm[{  5, 10 }] = inst[{ 25 , 30 }];
+    I_imm[{ 11, 31 }] = inst[31];
 
-    LUI   = opc_0110111;
-    AUIPC = opc_0010111;
-    JAL   = opc_1101111;
-    JALR  = opc_1100111 & fn3_000;
+    S_imm[0]           = inst[20];
+    S_imm[{  1, 4 }]   = inst[{  8, 11 }];
+    S_imm[{  5, 10 }]  = inst[{ 25, 30 }];
+    S_imm[{ 11, 31 }] = inst[31];
 
-    BEQ   = opc_1100011 & fn3_000;
-    BNE   = opc_1100011 & fn3_001;
-    BLT   = opc_1100011 & fn3_100;
-    BGE   = opc_1100011 & fn3_101;
-    BLTU  = opc_1100011 & fn3_110;
-    BGEU  = opc_1100011 & fn3_111;
+    B_imm[0]           = @'0';
+    B_imm[{ 1, 4 }]   = inst[{  8, 11 }];
+    B_imm[{ 5, 10 }]  = inst[{ 25, 30 }];
+    B_imm[11]          = inst[7];
+    B_imm[{ 12, 31 }] = inst[{ 31 }];
 
-    LB    = opc_0000011 & fn3_000;
-    LH    = opc_0000011 & fn3_001;
-    LW    = opc_0000011 & fn3_010;
-    LBU   = opc_0000011 & fn3_100;
-    LHU   = opc_0000011 & fn3_101;
+    U_imm[{  0, 11 }]  = @'0b0000_0000_0000';
+    U_imm[{ 12, 19 }] = inst[{ 12, 19 }];
+    U_imm[{ 20, 30 }] = inst[{ 20, 30 }];
+    last(U_imm)        = last(inst);
 
-    SB    = opc_0100011 & fn3_000;
-    SH    = opc_0100011 & fn3_001;
-    SW    = opc_0100011 & fn3_010;
-
-    ADDI  = opc_0010011 & fn3_000;
-    SLTI  = opc_0010011 & fn3_010;
-    SLTIU = opc_0010011 & fn3_011;
-    XORI  = opc_0010011 & fn3_100;
-    ORI   = opc_0010011 & fn3_110;
-    ANDI  = opc_0010011 & fn3_111;
-    SLLI  = opc_0010011 & fn3_001 & fn7_0000000;
-    SRLI  = opc_0010011 & fn3_101 & fn7_0000000;
-    SRAI  = opc_0010011 & fn3_101 & fn7_0100000;
-
-    ADD   = opc_0110011 & fn3_000 & fn7_0000000;
-    SUB   = opc_0110011 & fn3_000 & fn7_0100000;
-    SLL   = opc_0110011 & fn3_001 & fn7_0000000;
-    SLT   = opc_0110011 & fn3_010 & fn7_0000000;
-    SLTU  = opc_0110011 & fn3_011 & fn7_0000000;
-    XOR   = opc_0110011 & fn3_100 & fn7_0000000;
-    SRL   = opc_0110011 & fn3_101 & fn7_0000000;
-    SRA   = opc_0110011 & fn3_101 & fn7_0100000;
-    OR    = opc_0110011 & fn3_110 & fn7_0000000;
-    AND   = opc_0110011 & fn3_111 & fn7_0000000;
-
-    ECALL = fn_ECALL.output;
-
-    IGNORED = !(
-            LUI | AUIPC | JAL | JALR | BEQ | BNE | BLT | 
-            BGE | BLTU | BGEU | LB | LH | LW | LBU | 
-            LHU | SB | SH | SW | ADDI | SLTI | SLTIU | 
-            XORI | ORI | ANDI | SLLI | SRLI | SRAI | ADD | 
-            SUB | SLL | SLT | SLTU | XOR | SRL | SRA | 
-            OR | AND | ECALL);
+    J_imm[0]           = @'0';
+    J_imm[{ 1, 4 }]   = inst[{ 21, 24 }];
+    J_imm[{ 5, 10 }]  = inst[{ 25, 30 }];
+    J_imm[11]          = inst[20]
+    J_imm[{ 12, 19 }] = inst[{ 12, 19 }];
+    J_imm[{ 20, 31 }] = inst[{ 31 }];
 
 end
 
+
+//module RV_Decoder(void)
+//    in_ports: inst[32];
+//
+//    out_ports: imm32;
+//    out_ports: rs1[5], rs2[5], rd[5];
+//
+//    out_ports: LUI;
+//    out_ports: AUIPC;
+//    out_ports: JAL;
+//    out_ports: JALR;
+//    out_ports: BEQ, BNE, BLT, BGE, BLTU, BGEU;
+//    out_ports: LB, LH, LW, LBU, LHU;
+//    out_ports: SB, SH, SW;
+//    out_ports: ADDI, SLTI, SLTIU, XORI, ORI, ANDI, SLLI, SRLI, SRAI;
+//    out_ports: ADD, SUB, SLL, SLT, SLTU, XOR, SRL, SRA, OR, AND;
+// 
+//    out_ports: ECALL;
+//
+//    out_ports: IGNORED;
+//
+//    //
+//    // ignore FENCE, FENCE.I, and EBREAK
+//    // ECALL will just jump to a known location in memory (hardcoded for simplicity)
+//    // idk if i will implement the CSR instructions
+//    // they seem like the meaning of CSRs is highly platform dependent
+//    //
+//
+//start
+//
+//    local Unm : module = RV_Unmarshaller();
+//    Unm.inst = inst;
+//
+//    rs1 = Unm.rs1;
+//    rs2 = Unm.rs2;
+//    rd  = Unm.rd;
+//
+//    local opc7 : auto = builtin.match(
+//            0b0110111, // output index 0
+//            0b0010111,
+//            0b1101111,
+//            0b1100111,
+//            0b1100011,
+//            0b0000011,
+//            0b0100011,
+//            0b0010011,
+//            0b0110011,
+//            0b0001111,
+//            0b1110011, //  output index 10
+//            Unm.opcode); // input to match against
+//
+//    local opc_0110111 = opc7.output[ 0]; // LUI
+//    local opc_0010111 = opc7.output[ 1]; // AUIPC
+//    local opc_1101111 = opc7.output[ 2]; // JAL
+//    local opc_1100111 = opc7.output[ 3]; // JALR
+//    local opc_1100011 = opc7.output[ 4]; // BEQ, BNE, BLT, BGE, BLTU, BGEU
+//    local opc_0000011 = opc7.output[ 5]; // LB, LH, LW, LBU, LHU
+//    local opc_0100011 = opc7.output[ 6]; // SB, SH, SW
+//    local opc_0010011 = opc7.output[ 7]; // ADDI, SLTI, SLTIU, XORI, ORI, ANDI, SLLI, SRLI, SRAI
+//    local opc_0110011 = opc7.output[ 8]; // ADD, SUB, SLL, SLT, SLTU, XOR, SRL, SRA, OR, AND
+//    local opc_0001111 = opc7.output[ 9]; // FENCE, FENCE.I (both ignored, but we still need to decode them)
+//    local opc_1110011 = opc7.output[10]; // ECALL, ignored: EBREAK, CSRRW, CSRRS, CSRRC, CSRRWI, CSRRSI, CSRRCI
+//
+//    local decode_fn3 = builtin.decoder( 8, Unm.funct3 );
+//
+//    local fn3_000 = decode_fn3.output[0b000]; 
+//    local fn3_001 = decode_fn3.output[0b001];
+//    local fn3_010 = decode_fn3.output[0b010]; 
+//    local fn3_011 = decode_fn3.output[0b011];
+//    local fn3_100 = decode_fn3.output[0b100]; 
+//    local fn3_101 = decode_fn3.output[0b101];
+//    local fn3_110 = decode_fn3.output[0b110]; 
+//    local fn3_111 = decode_fn3.output[0b111];
+//
+//    local fn7 = builtin.match(
+//            0b0000000,
+//            0b0100000, Unm.funct7);
+//
+//    local fn7_0000000 = fn7.output[0];
+//    local fn7_0100000 = fn7.output[1];
+//
+//    local fn_ECALL = builtin.cmpeq(0b00000000_00000000_00000000_01110011, 32, inst);
+//
+//    //
+//    // define each instruction-out bit as the 
+//    // proper combination of above comparison outputs
+//    //
+//
+//    LUI   = opc_0110111;
+//    AUIPC = opc_0010111;
+//    JAL   = opc_1101111;
+//    JALR  = opc_1100111 & fn3_000;
+//
+//    BEQ   = opc_1100011 & fn3_000;
+//    BNE   = opc_1100011 & fn3_001;
+//    BLT   = opc_1100011 & fn3_100;
+//    BGE   = opc_1100011 & fn3_101;
+//    BLTU  = opc_1100011 & fn3_110;
+//    BGEU  = opc_1100011 & fn3_111;
+//
+//    LB    = opc_0000011 & fn3_000;
+//    LH    = opc_0000011 & fn3_001;
+//    LW    = opc_0000011 & fn3_010;
+//    LBU   = opc_0000011 & fn3_100;
+//    LHU   = opc_0000011 & fn3_101;
+//
+//    SB    = opc_0100011 & fn3_000;
+//    SH    = opc_0100011 & fn3_001;
+//    SW    = opc_0100011 & fn3_010;
+//
+//    ADDI  = opc_0010011 & fn3_000;
+//    SLTI  = opc_0010011 & fn3_010;
+//    SLTIU = opc_0010011 & fn3_011;
+//    XORI  = opc_0010011 & fn3_100;
+//    ORI   = opc_0010011 & fn3_110;
+//    ANDI  = opc_0010011 & fn3_111;
+//    SLLI  = opc_0010011 & fn3_001 & fn7_0000000;
+//    SRLI  = opc_0010011 & fn3_101 & fn7_0000000;
+//    SRAI  = opc_0010011 & fn3_101 & fn7_0100000;
+//
+//    ADD   = opc_0110011 & fn3_000 & fn7_0000000;
+//    SUB   = opc_0110011 & fn3_000 & fn7_0100000;
+//    SLL   = opc_0110011 & fn3_001 & fn7_0000000;
+//    SLT   = opc_0110011 & fn3_010 & fn7_0000000;
+//    SLTU  = opc_0110011 & fn3_011 & fn7_0000000;
+//    XOR   = opc_0110011 & fn3_100 & fn7_0000000;
+//    SRL   = opc_0110011 & fn3_101 & fn7_0000000;
+//    SRA   = opc_0110011 & fn3_101 & fn7_0100000;
+//    OR    = opc_0110011 & fn3_110 & fn7_0000000;
+//    AND   = opc_0110011 & fn3_111 & fn7_0000000;
+//
+//    ECALL = fn_ECALL.output;
+//
+//    IGNORED = !(
+//            LUI | AUIPC | JAL | JALR | BEQ | BNE | BLT | 
+//            BGE | BLTU | BGEU | LB | LH | LW | LBU | 
+//            LHU | SB | SH | SW | ADDI | SLTI | SLTIU | 
+//            XORI | ORI | ANDI | SLLI | SRLI | SRAI | ADD | 
+//            SUB | SLL | SLT | SLTU | XOR | SRL | SRA | 
+//            OR | AND | ECALL);
+//
+//end
+//
+//
+//
 

@@ -50,6 +50,13 @@ const std::string lexer_token_name(int token_type) {
     case LexerToken_Syntax_Equiv:    return "Syntax:equiv";    // ==
     case LexerToken_Syntax_NotEquiv: return "Syntax:notequiv"; // !=
 
+    case LexerToken_Syntax_Pipe     : return "Syntax:pipe";   // |   bitwise OR
+    case LexerToken_Syntax_Ampersand: return "Syntax:amp";    // &   bitwise AND
+    case LexerToken_Syntax_Caret    : return "Syntax:caret";  // ^   bitwise XOR
+    case LexerToken_Syntax_Plus     : return "Syntax:plus";   // +
+    case LexerToken_Syntax_Minus    : return "Syntax:minus";  // -   also a unary but the lexer doesnt know that
+    case LexerToken_Syntax_UnaryNegative: return "Syntax:negate"; // - (parser changes the type in-place)
+
     case LexerToken_NumberDec: return "Number:decimal";
     case LexerToken_NumberHex: return "Number:hexadecimal";
     case LexerToken_NumberBin: return "Number:binary";
