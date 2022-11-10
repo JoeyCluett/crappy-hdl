@@ -1,11 +1,10 @@
-#include <iostream>
-
-#include "src/file-reader.h"
-#include "src/lexical-token.h"
 #include "src/lexer.h"
-#include "src/parser.h"
+#include "src/file-reader.h"
 #include "src/error-util.h"
-#include "src/hdl-runtime.h"
+#include "src/semantic-analysis/parser.h"
+
+#include <vector>
+#include <iostream>
 
 using namespace std;
 
@@ -14,18 +13,20 @@ static std::string right_pad(const std::string& input_str, int len);
 
 int main(int argc, char* argv[]) {
 
-    //std::string filename = "hdl/toplevel.chdl";
-    std::string filename = "hdl/rv-decoder.chdl";
-    //std::string filename = "hdl/simplest-module.chdl";
+//    std::string filename = "hdl/riscv-decoder.chdl";
+    std::string filename = "hdl/adders.chdl";
 
     try {
         auto src    = read_hdl_file_contents(filename);
-        auto tokens = lexical_analyze(src, filename);
-        auto* rt    = parse(tokens, src, filename);
+        std::vector<token_t> tkns;
+        lexical_analyze(src, filename, tkns);
+        print_lexer_tokens(tkns);
 
-        hdl_runtime_print(std::cout, rt);
+        runtime_env_t* renv = new runtime_env_t;
 
-        hdl_runtime_toplevel_delete(rt);
+        parser_analyze(renv, src, filename, tkns);
+
+        delete renv;
     }
     catch(ParserError_t& parse_error) {
         handle_parse_error(std::cout, parse_error);

@@ -1,4 +1,4 @@
-#include "error-util.h"
+#include <src/error-util.h>
 
 #include <iostream>
 #include <vector>
@@ -13,14 +13,13 @@ void throw_parse_error(
         const std::string& filename, 
         const std::vector<char>& src, 
         int src_idx, 
-        const LexerToken_t& token) {
+        const token_t& token) {
 
     ParserError_t parse_error(src);
     parse_error.error_desc     = error_desc;
     parse_error.filename       = filename;
     parse_error.error_location = src_idx;
     parse_error.token          = token;
-
 
     // when using Valgrind, TRACE_ON_EXIT is defined
 
@@ -30,6 +29,14 @@ void throw_parse_error(
 #   else
     throw parse_error;
 #   endif
+}
+
+void throw_parse_error(
+        const std::string& error_desc,
+        const std::string& filename,
+        const std::vector<char>& src,
+        const token_t& token) {
+    throw_parse_error(error_desc, filename, src, token.start, token);
 }
 
 LexerError_t::LexerError_t(const std::vector<char>& src) : src_ref(src) {
@@ -54,11 +61,14 @@ void handle_parse_error(std::ostream& os, ParserError_t& parse_error) {
     os << "\nParseError in file '" << parse_error.filename << "':\n";
     os << parse_error.error_desc << "\n\n";
 
-    if(parse_error.token.type == LexerToken_StringLiteral) {
-        print_error_source(os, parse_error.error_location-1, parse_error.src_ref);
+    token_t t = parse_error.token;
+    const int t_len = t.end - t.start;
+
+    if(parse_error.token.type == token_type_t::string_literal) {
+        print_error_source(os, parse_error.error_location-1, parse_error.src_ref, t_len + 2);
     }
     else {
-        print_error_source(os, parse_error.error_location, parse_error.src_ref);
+        print_error_source(os, parse_error.error_location, parse_error.src_ref, t_len);
     }
 }
 
@@ -67,10 +77,10 @@ void handle_lexer_error(std::ostream& os, LexerError_t& lexer_error) {
     os << "\nLexerError in file '" << lexer_error.filename << "':\n";
     os << lexer_error.error_desc << "\n\n";
 
-    print_error_source(os, lexer_error.error_location, lexer_error.src_ref);
+    print_error_source(os, lexer_error.error_location, lexer_error.src_ref, 1);
 }
 
-void print_error_source(std::ostream& os, int src_idx, const std::vector<char>& src) {
+void print_error_source(std::ostream& os, int src_idx, const std::vector<char>& src, const int error_len) {
 
     //os << std::string(src.begin(), src.end()) << std::endl;
     //os << "Error index: " << src_idx << std::endl;
@@ -112,6 +122,9 @@ void print_error_source(std::ostream& os, int src_idx, const std::vector<char>& 
     while(start_iter < error_iter) {
         if(start_iter == tmp_iter) {
             os << '^';
+
+            for(int i = 0; i < (error_len - 1); i++)
+                os << '~';
         }
         else {
             os << ' ';
@@ -120,21 +133,8 @@ void print_error_source(std::ostream& os, int src_idx, const std::vector<char>& 
         start_iter++;
     }
 
+
     os << "\n\n";
 }
 
-/*
-extern "C" void stack_trace_on_exit(void) {
-    void* arr[256]; // up to 256 deep stack trace
-
-    int size = backtrace(arr, 256);
-    char** strs = backtrace_symbols(arr, size);
-
-    if(strs != NULL) {
-        for(int i = 0; i < size; i++) {
-            std::cout << strs[i] << std::endl;
-        }
-    }
-}
-*/
 

@@ -1,10 +1,10 @@
 
-module full_adder(void)
+module "full_adder"(void)
     in: cin, a, b;
     out: sum, cout;
 start
-    sum  = a ^ b ^ cin;
-    cout = (a & b) | ((a ^ b) & cin);
+    out.sum  = in.a ^ in.b ^ in.cin;
+    out.cout = (in.a & in.b) | ((in.a ^ in.b) & in.cin);
 end
 
 //
@@ -15,18 +15,26 @@ module adder(width : integer)
     out: cout, sum[width];
 start
 
-    local adders : module = vector();
-    local current_cin = cin;
+    // vectors can hold arbitrary stuff, 0-indexed as God intended
+    //local vecstuff : vector{ 0, @1001, module.full_adder() };
 
-    for(local i : integer; 0; width) start
-        push(adders, full_adder());
+    local adders : vector;
+    ref current_cin = in.cin;
+
+    local i : integer;
+    for(i = 0; i < width; i = i + 1) start
+        push(adders, module.full_adder()); // push an instance of full_adder onto adders vector
+
         last(adders).cin = current_cin;
         last(adders).a   = a[i];
         last(adders).b   = b[i];
-        sum[i]        = last(adders).sum;
-        current_cin   = last(adders).cout; // update for next adder
+
+        out.sum[i] = last(adders).sum;   // save output bit
+        current_cin = last(adders).cout; // update carry for next adder
     end
 
-    cout = current_cin;
+    out.cout = current_cin;
 end
 
+false
+true

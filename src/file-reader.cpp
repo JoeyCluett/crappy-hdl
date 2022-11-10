@@ -1,7 +1,8 @@
-#include "file-reader.h"
+#include <src/file-reader.h>
 
 #include <vector>
 #include <string>
+#include <iostream>
 
 std::vector<char> read_hdl_file_contents(const std::string& filename) {
 
@@ -60,6 +61,9 @@ std::vector<char> read_hdl_file_contents(const std::string& filename) {
     fclose(fptr);
 
     v.push_back('\n');
+    v.push_back('\0');
+    std::cout << v.data();
+    v.pop_back();
     return v;
 }
 

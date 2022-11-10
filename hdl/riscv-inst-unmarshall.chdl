@@ -1,0 +1,47 @@
+
+module RISCV_Unmarshaller(void)
+    in:  inst[32];
+    out: opcode[7], rs1[5], rs2[5], rd[5];
+    out: funct3[3], funct[7];
+    out: I_imm[32], S_imm[32], B_imm[32], U_imm[32], J_imm[32];
+start
+
+    out.opcode[1-1:3+12-9] = in.inst[0:6];
+    out.rs1[0:4]           = in.inst[15:19];
+    out.rs2[0:4]           = in.inst[20:24];
+    out.rd[0:4]            = in.inst[7:11];
+    out.funct3[0:2]        = in.inst[12:14];
+    out.funct7[0:6]        = in.inst[25:31];
+
+    //
+    // stitch together all the different types of immediates
+    //
+    out.I_imm[0]     = in.inst[20];
+    out.I_imm[1:4]   = in.inst[21:24];
+    out.I_imm[5:10]  = in.inst[25:30];
+    out.I_imm[11:31] = in.inst[31];
+
+    out.S_imm[0]     = in.inst[20];
+    out.S_imm[1:4]   = in.inst[8:11];
+    out.S_imm[5:10]  = in.inst[25:30]; // many-to-many
+    out.S_imm[11:31] = in.inst[31];    // one-to-many
+
+    out.B_imm[0]     = false;
+    out.B_imm[1:4]   = in.inst[8:11];
+    out.B_imm[5:10]  = in.inst[25:30];
+    out.B_imm[11]    = in.inst[7];
+    out.B_imm[12:31] = in.inst[31];
+
+    out.U_imm[0:11]  = @0000_0000_0000; // 12-bit bit literal
+    out.U_imm[12:19] = in.inst[12:19];
+    out.U_imm[20:30] = in.inst[20:30];
+    last(out.U_imm)  = last(in.inst);
+
+    out.J_imm[0]     = false;
+    out.J_imm[1:4 ]  = in.inst[21:24];
+    out.J_imm[5:10]  = in.inst[25:30];
+    out.J_imm[11]    = in.inst[20]
+    out.J_imm[12:19] = in.inst[12:19];
+    out.J_imm[20:31] = in.inst[31];
+end
+
