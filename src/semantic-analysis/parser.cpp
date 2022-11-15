@@ -27,12 +27,12 @@ void parser_analyze(runtime_env_t* rtenv, src_t& src, const std::string& filenam
         case token_type_t::keyword_module:
             parse_module(rtenv, pinfo, tokeniter, tokenend);
             break;
-        //case token_type_t::keyword_uses:
+        //case token_type_t::keyword_uses: // not supported yet
         default:
             throw_parse_error("expecting 'module', found '" + lexer_token_value(tok, src) + "' of type " + lexer_token_type(tok.type), filename, src, tok);
         }
 
-        tokeniter++;
+        //tokeniter++;
     }
 }
 

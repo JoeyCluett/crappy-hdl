@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
         auto src    = read_hdl_file_contents(filename);
         std::vector<token_t> tkns;
         lexical_analyze(src, filename, tkns);
-        print_lexer_tokens(tkns);
+//        print_lexer_tokens(tkns);
 
         runtime_env_t* renv = new runtime_env_t;
 

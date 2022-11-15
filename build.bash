@@ -17,6 +17,7 @@ SRC_FOLDERS=(                    \
     src/semantic-analysis        \
     src/semantic-analysis/module \
     src/runtime                  \
+    src/bytecode-data            \
 )
 
 #src/parse-fsm src/parse-fsm/module src/parse-fsm/module/expr src/ir src/parse-fsm/static-analysis )

@@ -10,11 +10,12 @@
 #include <string>
 
 //
-// top-level function for parsing modules
-// expects first iter to be the module name following 'module' keyword
+// top-level function for parsing interface (in/out) section following argument list
 //
-void parse_module(
+void parse_interface(
         runtime_env_t* rtenv,
+        module_desc_t* modptr,
         parse_info_t& p,
         token_iterator_t& titer,
         const token_iterator_t& tend);
+

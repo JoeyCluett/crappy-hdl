@@ -1,4 +1,6 @@
 #include <src/semantic-analysis/module/parse-module.h>
+#include <src/semantic-analysis/module/parse-arg-list.h>
+#include <src/semantic-analysis/module/parse-interface.h>
 #include <src/semantic-analysis/parser.h>
 #include <src/lexer.h>
 #include <src/error-util.h>
@@ -9,7 +11,7 @@ void parse_module(
         runtime_env_t* rtenv,
         parse_info_t& p,
         token_iterator_t& titer,
-        token_iterator_t tend) {
+        const token_iterator_t& tend) {
 
     token_t& modulename = *titer++;
     string_t modnamestr = lexer_token_value(modulename, p.src);
@@ -21,7 +23,15 @@ void parse_module(
 
     module_desc_t* mod = runtime_env_create_new_module(rtenv, modnamestr, p, modulename);
 
-    titer++;
-    
+    token_t& openparen = *titer++;
+    if(openparen.type != token_type_t::lparen) {
+        throw_parse_error(
+            "Expecting open paren '(', found " + lexer_token_desc(openparen, p.src), p.filename, p.src, openparen);
+    }
+
+    parse_arg_list(rtenv, mod, p, titer, tend);
+
+    parse_interface(rtenv, mod, p, titer, tend);
+
 }
 

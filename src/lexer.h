@@ -8,9 +8,9 @@ typedef const std::vector<char>           src_t;
 
 enum class token_type_t {
     UNKNOWN,
-    keyword_integer,
-    keyword_uinteger,
-    keyword_string,
+    keyword_integer,  // type
+    keyword_uinteger, // ...
+    keyword_string,   // ...
     keyword_bit,
     keyword_module,
     keyword_out,
@@ -58,6 +58,7 @@ enum class token_type_t {
     string_literal,
     unary_negative, // - lexer assumes always minus, parser can change to negate
     bit_assign,     // :=
+    function,  // one of a variety of native functions
 };
 
 struct token_t {
@@ -73,6 +74,8 @@ typedef std::vector<token_t>::iterator token_iterator_t;
 //
 void lexical_analyze(src_t& src, const std::string& filename, std::vector<token_t>& tkns);
 
+const bool lexer_token_is_typespec(const token_t& tok);
+
 typedef std::string string_t;
 
 const string_t lexer_token_type(token_type_t);
@@ -80,4 +83,5 @@ const string_t lexer_token_value(const token_t& tok, src_t& src);
 const string_t lexer_token_desc(const token_t& tok, src_t& src);
 void print_lexer_tokens(std::vector<token_t>& tkns);
 
+size_t lexer_token_to_uinteger(const token_t& tok, struct parse_info_t& p);
 

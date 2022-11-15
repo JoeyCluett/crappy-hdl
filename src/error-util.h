@@ -7,6 +7,8 @@
 
 #define STR(s) std::to_string(s)
 
+#define INTERNAL_ERR() throw std::runtime_error("Unknown internal error\n    file : " + std::string(__FILE__) + "\n    line : " + std::to_string(__LINE__))
+
 void print_error_source(std::ostream& os, int src_idx, const std::vector<char>& src, const int error_len);
 
 struct ParserError_t {
@@ -52,3 +54,4 @@ void throw_lexer_error(
         int src_idx);
 
 void handle_parse_error(std::ostream& os, ParserError_t& parse_error);
+

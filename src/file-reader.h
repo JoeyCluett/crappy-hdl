@@ -5,4 +5,3 @@
 #include <string>
 
 std::vector<char> read_hdl_file_contents(const std::string& filename);
-

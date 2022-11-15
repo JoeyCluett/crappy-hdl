@@ -7,15 +7,11 @@
 #include <map>
 #include <string>
 
-struct module_desc_t;
-struct parse_info_t;
-
 struct runtime_env_t {
 
-    std::map<std::string, module_desc_t*> modules;
+    std::map<std::string, struct module_desc_t*> modules;
 
     ~runtime_env_t();
-
 };
 
 //
@@ -24,5 +20,5 @@ struct runtime_env_t {
 module_desc_t* runtime_env_create_new_module(
         runtime_env_t* renv,
         const std::string& new_module_name,
-        parse_info_t& p,
+        struct parse_info_t& p,
         token_t& tok);

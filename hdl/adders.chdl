@@ -1,15 +1,4 @@
 
-module "full_adder"(void)
-    in: cin, a, b;
-    out: sum, cout;
-start
-    out.sum  = in.a ^ in.b ^ in.cin;
-    out.cout = (in.a & in.b) | ((in.a ^ in.b) & in.cin);
-end
-
-//
-// ripple carry adder
-//
 module adder(width : integer)
     in: cin, a[width], b[width];
     out: cout, sum[width];
@@ -26,8 +15,8 @@ start
         push(adders, module.full_adder()); // push an instance of full_adder onto adders vector
 
         last(adders).cin = current_cin;
-        last(adders).a   = a[i];
-        last(adders).b   = b[i];
+        last(adders).a   = in.a[i];
+        last(adders).b   = in.b[i];
 
         out.sum[i] = last(adders).sum;   // save output bit
         current_cin = last(adders).cout; // update carry for next adder
@@ -35,6 +24,18 @@ start
 
     out.cout = current_cin;
 end
+
+module full_adder(void)
+    in: cin, a, b;
+    out: sum, cout;
+start
+    out.sum  = in.a ^ in.b ^ in.cin;
+    out.cout = (in.a & in.b) | ((in.a ^ in.b) & in.cin);
+end
+
+//
+// ripple carry adder
+//
 
 false
 true

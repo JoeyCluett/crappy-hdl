@@ -1,8 +1,10 @@
 #include <src/lexer.h>
 #include <src/lexer-syntax.h>
 #include <src/error-util.h>
+#include <src/semantic-analysis/parser.h>
 
 #include <map>
+#include <set>
 #include <string>
 #include <iostream>
 #include <algorithm>
@@ -211,8 +213,8 @@ static void lexer_word_eval(token_t& token, std::vector<token_t>& tkns) {
     const std::string word(srcbeg + token.start, srcbeg + token.end);
 
     static const std::map<std::string, token_type_t> keywords = {
-        { "int",      token_type_t::keyword_integer  },
-        { "uint",     token_type_t::keyword_uinteger },
+        { "integer",  token_type_t::keyword_integer  },
+        { "uinteger", token_type_t::keyword_uinteger },
         { "string",   token_type_t::keyword_string   },
         { "bit",      token_type_t::keyword_bit      },
         { "module",   token_type_t::keyword_module   },
@@ -222,17 +224,25 @@ static void lexer_word_eval(token_t& token, std::vector<token_t>& tkns) {
         { "end",      token_type_t::keyword_end      },
         { "void",     token_type_t::keyword_void     },
         { "local",    token_type_t::keyword_local    },
-        { "ref",      token_type_t::keyword_ref },
+        { "ref",      token_type_t::keyword_ref      },
         { "builtin",  token_type_t::keyword_builtin  },
-        { "true",     token_type_t::keyword_true_  },
-        { "false",    token_type_t::keyword_false_ },
+        { "true",     token_type_t::keyword_true_    },
+        { "false",    token_type_t::keyword_false_   },
+    };
+
+    static const std::set<std::string> functions = {
+        "push", "last"
     };
 
     auto keyword_iter = keywords.find(word);
-
-    if(keyword_iter == keywords.end()) { // variable name
-        token.type = token_type_t::variable_name;
-    } else { // keyword
+    if(keyword_iter == keywords.end()) {
+        auto function_iter = functions.find(word);
+        if(function_iter == functions.end()) {
+            token.type = token_type_t::variable_name;
+        } else {
+            token.type = token_type_t::function;
+        }
+    } else {
         token.type = keyword_iter->second;
     }
 
@@ -380,6 +390,7 @@ const string_t lexer_token_type(token_type_t token_type) {
     case token_type_t::number_bin:       return "binary_number";
     case token_type_t::string_literal:   return "string";
     case token_type_t::bit_assign:       return "bit_assign";     // :=
+    case token_type_t::function:         return "function";   // one of a number of native builtin functions
     }
 }
 
@@ -398,6 +409,70 @@ const string_t lexer_token_desc(const token_t& tok, src_t& src) {
     return "`" + lexer_token_value(tok, src) + "' [type=" + lexer_token_type(tok.type) + "]";
 }
 
+const bool lexer_token_is_typespec(const token_t& tok) {
+    switch(tok.type) {
+    case token_type_t::keyword_integer:
+    case token_type_t::keyword_uinteger:
+    case token_type_t::keyword_string:
+        return true;
+    default:
+        return false;
+    }
+}
+
+size_t lexer_token_to_uinteger(const token_t& tok, parse_info_t& p) {
+    size_t v = 0ul;
+
+    if(tok.type == token_type_t::number_bin) {
+        std::string s = lexer_token_value(tok, p.src);
+        for(auto iter = s.begin() + 2; iter < s.end(); iter++) {
+            const char c = *iter;
+            switch(c) {
+            case '0':
+            case '1':
+                v <<= 1;
+                v += (c - '0');
+                break;
+            case '_':
+                break;
+            default:
+                throw_parse_error("Invalid character in binary constant " + lexer_token_desc(tok, p.src), p.filename, p.src, tok);
+            }
+        }
+
+    } else if(tok.type == token_type_t::number_dec) {
+        std::string s = lexer_token_value(tok, p.src);
+        for(auto iter = s.begin(); iter < s.end(); iter++) {
+            const char c = *iter;
+            if(is_number_char(c)) {
+                v *= 10ul;
+                v += (c - '0');
+            } else if(c != '_') {
+                throw_parse_error("Invalid character in decimal constant " + lexer_token_desc(tok, p.src), p.filename, p.src, tok);
+            }
+        }
+    } else if(tok.type == token_type_t::number_hex) {
+        std::string s = lexer_token_value(tok, p.src);
+        for(auto iter = s.begin() + 2; iter < s.end(); iter++) {
+            const char c = *iter;
+            if(is_hex_digit(c)) {
+                v *= 16ul;
+                if(is_number_char(c)) {           v += (c - '0');
+                } else if(c >= 'a' && c <= 'f') { v += (10 + c - 'a');
+                } else if(c >= 'A' && c <= 'F') { v += (10 + c - 'A');
+                } else {                          INTERNAL_ERR();
+                }
+            } else if(c != '_') {
+                throw_parse_error("Invalid character in hexadecimal constant " + lexer_token_desc(tok, p.src), p.filename, p.src, tok);
+            }
+        }
+    } else {
+        INTERNAL_ERR();
+    }
+
+    return v;
+}
+
 void print_lexer_tokens(std::vector<token_t>& tkns) {
 
     const int padding = 20;
@@ -413,4 +488,5 @@ void print_lexer_tokens(std::vector<token_t>& tkns) {
     }
 
 }
+
 
