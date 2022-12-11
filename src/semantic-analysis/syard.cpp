@@ -46,7 +46,7 @@ static const bool is_unary_operator(token_type_t t);
 
 static const bool is_binary_operator(token_type_t t);
 
-static const bool is_operator(token_type_t t) {
+const bool token_is_operator(token_type_t t) {
     return precedence_table.find(t) != precedence_table.end();
 }
 
@@ -58,16 +58,15 @@ void process_shunting_yard(
         const token_iterator_t& tend,
         shunting_stack_t& shunt_stack,
         const std::set<token_type_t>& end_types,
-        const size_t min_stack_size) {
+        shunt_behavior_t shunt_behavior) {
 
-    size_t stack_size = shunt_stack.op_stack.size();
-    while(stack_size >= min_stack_size && titer < tend) {
+    while(titer < tend) {
         token_t& tok = *titer++;
 
-        std::cout << "op stack size : " << shunt_stack.op_stack.size() << std::endl;
-        std::cout << lexer_token_desc(tok, p.src) << std::endl;
+        //std::cout << "op stack size : " << shunt_stack.op_stack.size() << std::endl;
+        //std::cout << lexer_token_desc(tok, p.src) << std::endl;
 
-        if(end_types.find(tok.type) != end_types.end())
+        if(shunt_behavior == shunt_behavior_before && end_types.find(tok.type) != end_types.end())
             return;
 
         switch(tok.type) {
@@ -77,7 +76,7 @@ void process_shunting_yard(
             if(pr.first == false)
                 throw_parse_error("local variable with name '" + val + "' does not exist in module '" + modptr->name + "'", p.filename, p.src, tok);
 
-            opc.push_local_ref(modptr, pr.second);
+            opc::push_local_ref(modptr, pr.second);
             shunt_stack.eval_stack.push_back(eval_token_t::variable_reference);
             break;
         }
@@ -85,7 +84,7 @@ void process_shunting_yard(
         case token_type_t::number_bin:
         case token_type_t::number_dec:
         case token_type_t::number_hex:
-            opc.push_uinteger(modptr, lexer_token_to_uinteger(tok, p));
+            opc::push_uinteger(modptr, lexer_token_to_uinteger(tok, p));
             shunt_stack.eval_stack.push_back(eval_token_t::numeric_reference);
             break;
 
@@ -95,7 +94,7 @@ void process_shunting_yard(
 
         case token_type_t::function: {
             shunt_stack.op_stack.push_back(tok);
-            opc.push_fn_args_sentinal(modptr);
+            opc::push_fn_args_sentinal(modptr);
             token_t& next_token = *titer++;
             if(next_token.type != token_type_t::lparen)
                 throw_parse_error("Expecting '(', found " + lexer_token_desc(next_token, p.src), p.filename, p.src, next_token);
@@ -103,25 +102,75 @@ void process_shunting_yard(
             break;
         }
 
-        case token_type_t::rparen:
-            while(shunt_stack.op_stack.size() > 0ul) {
+        case token_type_t::rparen: {
+            bool check = true;
+            while(shunt_stack.op_stack.size() > 0ul && check) {
                 token_t t = shunt_stack.op_stack.back();
-
-                if(is_operator(t.type)) {
-                    shunting_yard_eval_operator(rtenv, modptr, p, titer, tend, shunt_stack, t);
-                } else if(t.type == token_type_t::lparen) {
+                switch(t.type) {
+                case token_type_t::lparen:
                     shunt_stack.op_stack.pop_back();
-                } else if(t.type == token_type_t::function) {
-                    opc.push_fn_args_sentinal(modptr);
+                    break;
+
+                case token_type_t::function: {
+                    string_t fname = lexer_token_value(t, p.src);
+                    auto tup = lexer_token_is_function(fname);
+                    if(!std::get<0>(tup))
+                        INTERNAL_ERR();
+
+                    opc::function_call(modptr, std::get<2>(tup));
+                    break;
                 }
 
+                case token_type_t::lbrace:
+                case token_type_t::lbracket:
+                    throw_parse_error("Unmatched " + lexer_token_desc(t, p.src), p.filename, p.src, t);
+
+                default:
+                    if(token_is_operator(t.type)) {
+                        shunting_yard_eval_operator(rtenv, modptr, p, titer, tend, shunt_stack, t);
+                        shunt_stack.op_stack.pop_back();
+                    } else {
+                        throw_parse_error("Unknown type when evaluating closing parentheses " + lexer_token_desc(t, p.src), p.filename, p.src, t);
+                    }
+                }
             }
             break;
         }
+        default:
+            if(token_is_operator(tok.type)) {
+                auto cur_prec = precedence_table.find(tok.type);
+                if(cur_prec == precedence_table.end())
+                    throw_parse_error("Unknown operator " + lexer_token_desc(tok, p.src), p.filename, p.src, tok);
 
-        stack_size = shunt_stack.op_stack.size();
+                bool loop = true;
+                while(loop && shunt_stack.op_stack.size() > 0ul) {
+                    token_t t = shunt_stack.op_stack.back();
+                    if(t.type == token_type_t::lparen || t.type == token_type_t::function) {
+                        loop = false;
+                    } else if(token_is_operator(t.type)) {
+                        auto t_prec = precedence_table.find(t.type);
+                        if(t_prec == precedence_table.end())
+                            throw_parse_error("Unknown operator " + lexer_token_desc(t, p.src), p.filename, p.src, t);
+
+                        if(t_prec->second.first > cur_prec->second.first) {
+                            shunting_yard_eval_operator(rtenv, modptr, p, titer, tend, shunt_stack, t);
+                            shunt_stack.op_stack.pop_back();
+                        } else {
+                            loop = false;
+                        }
+                    } else {
+                        loop = false;
+                    }
+                }
+                break;
+            } else {
+                throw_parse_error("[DEFAULT] unknown token " + lexer_token_desc(tok, p.src), p.filename, p.src, tok);
+            }
+        }
+
+        if(shunt_behavior == shunt_behavior_after && end_types.find(tok.type) != end_types.end())
+            return;
     }
-
 }
 
 void shunting_yard_eval_operator(
@@ -216,4 +265,21 @@ void shunting_yard_eval_operator(
     default:
         INTERNAL_ERR();
     }
+}
+
+void shunting_yard_print_eval_stack(shunting_stack_t& shunt_stack) {
+
+    std::cout << " eval stack (size=" << shunt_stack.eval_stack.size() << ")\n";
+    std::cout << "========================\n";
+    for(auto et : shunt_stack.eval_stack) {
+        switch(et) {
+        case eval_token_t::numeric_reference:  std::cout << "    numeric_reference\n"; break;
+        case eval_token_t::variable_reference: std::cout << "    variable_reference\n"; break;
+        case eval_token_t::module_reference:   std::cout << "    module_reference\n"; break;
+        case eval_token_t::left_paren:         std::cout << "    left_paren\n"; break;
+        case eval_token_t::left_bracket:       std::cout << "    left_bracket\n"; break;
+        case eval_token_t::function_arg_list:  std::cout << "    function_arg_list\n"; break;
+        }
+    }
+    std::cout << "\n\n";
 }

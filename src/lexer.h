@@ -2,6 +2,8 @@
 
 #include <vector>
 #include <string>
+#include <utility>
+#include <tuple>
 
 typedef std::vector<char>::const_iterator src_iter_t;
 typedef const std::vector<char>           src_t;
@@ -11,6 +13,7 @@ enum class token_type_t {
     keyword_integer,  // type
     keyword_uinteger, // ...
     keyword_string,   // ...
+    keyword_vector,   // ...
     keyword_bit,
     keyword_module,
     keyword_out,
@@ -21,8 +24,8 @@ enum class token_type_t {
     keyword_local,
     keyword_ref,
     keyword_builtin,
-    keyword_true_,          // true literal
-    keyword_false_,         // false literal
+    keyword_true_,  // true literal
+    keyword_false_, // false literal
     variable_name,
     bit_literal, // @00_1010_0101 etc.
     semicolon,   // ;
@@ -58,7 +61,15 @@ enum class token_type_t {
     string_literal,
     unary_negative, // - lexer assumes always minus, parser can change to negate
     bit_assign,     // :=
-    function,  // one of a variety of native functions
+    function,  // one of a variety of native functions (see function_type_t below)
+};
+
+enum class function_type_t : uint8_t {
+    UNKNOWN,
+    push,
+    last,
+    print,
+    cast,
 };
 
 struct token_t {
@@ -68,6 +79,8 @@ struct token_t {
 };
 
 typedef std::vector<token_t>::iterator token_iterator_t;
+
+const bool operator==(const token_t& tok, token_type_t tt);
 
 //
 // no return type because this function throws exceptions on error
@@ -84,4 +97,7 @@ const string_t lexer_token_desc(const token_t& tok, src_t& src);
 void print_lexer_tokens(std::vector<token_t>& tkns);
 
 size_t lexer_token_to_uinteger(const token_t& tok, struct parse_info_t& p);
+
+std::tuple<bool, string_t, token_type_t> lexer_token_is_keyword(const std::string& s);
+std::tuple<bool, string_t, function_type_t> lexer_token_is_function(const std::string& s);
 

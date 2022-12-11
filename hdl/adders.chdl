@@ -1,13 +1,13 @@
 
 module adder(width : integer)
-    in: cin, a[width], b[width];
+    in: cin, a[width/2], b[width];
     out: cout, sum[width];
 start
 
     // vectors can hold arbitrary stuff, 0-indexed as God intended
     //local vecstuff : vector{ 0, @1001, module.full_adder() };
 
-    local adders : vector;
+    local adders: vector;
     ref current_cin = in.cin;
 
     local i : integer;
@@ -18,7 +18,7 @@ start
         last(adders).a   = in.a[i];
         last(adders).b   = in.b[i];
 
-        out.sum[i] = last(adders).sum;   // save output bit
+        out.sum[i]  = last(adders).sum;   // save output bit
         current_cin = last(adders).cout; // update carry for next adder
     end
 

@@ -12,12 +12,13 @@ RST=`tput sgr0`
 #
 # additional project folders specified here:
 #
-SRC_FOLDERS=(                    \
-    src                          \
-    src/semantic-analysis        \
-    src/semantic-analysis/module \
-    src/runtime                  \
-    src/bytecode-data            \
+SRC_FOLDERS=(                         \
+    src                               \
+    src/semantic-analysis             \
+    src/semantic-analysis/module      \
+    src/semantic-analysis/module/expr \
+    src/runtime                       \
+    src/bytecode-data                 \
 )
 
 #src/parse-fsm src/parse-fsm/module src/parse-fsm/module/expr src/ir src/parse-fsm/static-analysis )
@@ -105,6 +106,3 @@ printf "\n    to run program: '${GRN}make${RST}' and '${GRN}make run${RST}'\n\n"
 
 echo "wHy NoT jUsT uSe cMaKe!?"
 echo "because i dont want to"
-
-
-

@@ -23,6 +23,11 @@ struct shunting_stack_t {
     std::vector<eval_token_t> eval_stack;
 };
 
+enum shunt_behavior_t {
+    shunt_behavior_before,
+    shunt_behavior_after,
+};
+
 void process_shunting_yard(
         struct runtime_env_t* rtenv,
         struct module_desc_t* modptr,
@@ -31,7 +36,7 @@ void process_shunting_yard(
         const token_iterator_t& tend,
         shunting_stack_t& shunt_stack,
         const std::set<token_type_t>& end_types,
-        const size_t min_stack_size);
+        shunt_behavior_t shunt_behavior);
 
 void shunting_yard_eval_operator(
         struct runtime_env_t* rtenv,
@@ -41,3 +46,7 @@ void shunting_yard_eval_operator(
         const token_iterator_t& tend,
         shunting_stack_t& shunt_stack,
         const token_t& t);
+
+void shunting_yard_print_eval_stack(shunting_stack_t& shunt_stack);
+
+const bool token_is_operator(token_type_t t);

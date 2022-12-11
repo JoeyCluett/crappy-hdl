@@ -1,9 +1,11 @@
 #include <src/semantic-analysis/module/parse-module.h>
 #include <src/semantic-analysis/module/parse-arg-list.h>
 #include <src/semantic-analysis/module/parse-interface.h>
+#include <src/semantic-analysis/module/parse-body.h>
 #include <src/semantic-analysis/parser.h>
 #include <src/lexer.h>
 #include <src/error-util.h>
+#include <src/bytecode-data/disassemble.h>
 #include <src/runtime/runtime-env.h>
 #include <src/runtime/module-desc.h>
 
@@ -30,8 +32,10 @@ void parse_module(
     }
 
     parse_arg_list(rtenv, mod, p, titer, tend);
-
     parse_interface(rtenv, mod, p, titer, tend);
 
+    disassemble_bytecode(std::cout, mod);
+
+    parse_body(rtenv, mod, p, titer, tend);
 }
 

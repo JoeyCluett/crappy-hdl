@@ -212,38 +212,16 @@ static void lexer_word_eval(token_t& token, std::vector<token_t>& tkns) {
     auto srcbeg = srcptr->begin();
     const std::string word(srcbeg + token.start, srcbeg + token.end);
 
-    static const std::map<std::string, token_type_t> keywords = {
-        { "integer",  token_type_t::keyword_integer  },
-        { "uinteger", token_type_t::keyword_uinteger },
-        { "string",   token_type_t::keyword_string   },
-        { "bit",      token_type_t::keyword_bit      },
-        { "module",   token_type_t::keyword_module   },
-        { "out",      token_type_t::keyword_out      },
-        { "in",       token_type_t::keyword_in       },
-        { "start",    token_type_t::keyword_start    },
-        { "end",      token_type_t::keyword_end      },
-        { "void",     token_type_t::keyword_void     },
-        { "local",    token_type_t::keyword_local    },
-        { "ref",      token_type_t::keyword_ref      },
-        { "builtin",  token_type_t::keyword_builtin  },
-        { "true",     token_type_t::keyword_true_    },
-        { "false",    token_type_t::keyword_false_   },
-    };
-
-    static const std::set<std::string> functions = {
-        "push", "last"
-    };
-
-    auto keyword_iter = keywords.find(word);
-    if(keyword_iter == keywords.end()) {
-        auto function_iter = functions.find(word);
-        if(function_iter == functions.end()) {
-            token.type = token_type_t::variable_name;
-        } else {
-            token.type = token_type_t::function;
-        }
+    auto kw_tup = lexer_token_is_keyword(word);
+    if(std::get<0>(kw_tup)) {
+        token.type = std::get<2>(kw_tup);
     } else {
-        token.type = keyword_iter->second;
+        auto fn_tup = lexer_token_is_function(word);
+        if(std::get<0>(fn_tup)) {
+            token.type = token_type_t::function;
+        } else {
+            token.type = token_type_t::variable_name;
+        }
     }
 
     tkns.push_back(token);
@@ -414,6 +392,7 @@ const bool lexer_token_is_typespec(const token_t& tok) {
     case token_type_t::keyword_integer:
     case token_type_t::keyword_uinteger:
     case token_type_t::keyword_string:
+    case token_type_t::keyword_vector:
         return true;
     default:
         return false;
@@ -487,6 +466,54 @@ void print_lexer_tokens(std::vector<token_t>& tkns) {
         std::cout << tok_value << std::endl;
     }
 
+}
+
+const bool operator==(const token_t& tok, token_type_t tt) {
+    return tok.type == tt;
+}
+
+static const std::map<std::string, token_type_t> keywords = {
+    { "integer",  token_type_t::keyword_integer  },
+    { "uinteger", token_type_t::keyword_uinteger },
+    { "string",   token_type_t::keyword_string   },
+    { "bit",      token_type_t::keyword_bit      },
+    { "module",   token_type_t::keyword_module   },
+    { "out",      token_type_t::keyword_out      },
+    { "in",       token_type_t::keyword_in       },
+    { "start",    token_type_t::keyword_start    },
+    { "end",      token_type_t::keyword_end      },
+    { "void",     token_type_t::keyword_void     },
+    { "local",    token_type_t::keyword_local    },
+    { "ref",      token_type_t::keyword_ref      },
+    { "builtin",  token_type_t::keyword_builtin  },
+    { "true",     token_type_t::keyword_true_    },
+    { "false",    token_type_t::keyword_false_   },
+    { "vector",   token_type_t::keyword_vector   },
+};
+
+static const std::map<std::string, function_type_t> functions = {
+    { "push",  function_type_t::push  },
+    { "last",  function_type_t::last  },
+    { "print", function_type_t::print },
+    { "cast",  function_type_t::cast  },
+};
+
+std::tuple<bool, string_t, token_type_t> lexer_token_is_keyword(const std::string& s) {
+    auto iter = keywords.find(s);
+    if(iter == keywords.end()) {
+        return { false, "", token_type_t::UNKNOWN };
+    } else {
+        return { true, iter->first, iter->second };
+    }
+}
+
+std::tuple<bool, string_t, function_type_t> lexer_token_is_function(const std::string& s) {
+    auto iter = functions.find(s);
+    if(iter == functions.end()) {
+        return { false, "", function_type_t::UNKNOWN };
+    } else {
+        return { true, iter->first, iter->second };
+    }
 }
 
 

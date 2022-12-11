@@ -7,19 +7,54 @@
 #include <string>
 #include <stdlib.h>
 
+std::ostream& operator<<(std::ostream& os, const module_desc_t& modptr) {
+
+    os << "module : " << modptr.name << "\n";
+    os << "argument list:\n";
+    for(auto& p : modptr.argument_list) {
+        os << "    " << modptr.constants.at(p.first) << ", type[";
+        switch(p.second) {
+        case token_type_t::keyword_integer:  os << "integer]"; break;
+        case token_type_t::keyword_uinteger: os << "uinteger]"; break;
+        case token_type_t::keyword_string:   os << "string]"; break;
+        default:
+            os << "INVALID]"; break;
+        }
+        os << "\n";
+    }
+
+    os << "interface:\n";
+    for(auto& p : modptr.interface_elements) {
+        os << "    " << p.first << ", dir[";
+        switch(std::get<0>(p.second)) {
+        case module_desc_t::interface_type_t::in: os << "in], type["; break;
+        case module_desc_t::interface_type_t::out: os << "out], type["; break;
+        default: os << "INVALID], type["; break;
+        }
+
+        switch(std::get<1>(p.second)) {
+        case module_desc_t::interface_size_t::single: os << "bit]"; break;
+        case module_desc_t::interface_size_t::array: os << "array]"; break;
+        default: os << "INVALID]"; break;
+        }
+        os << "\n";
+    }
+
+    return os;
+}
+
 std::tuple<bool, size_t, std::string> module_desc_add_interface_element(
         module_desc_t* modptr,
         const std::string& el_name,
         module_desc_t::interface_type_t int_type,
-        module_desc_t::interface_size_t int_size,
-        size_t const_size) {
+        module_desc_t::interface_size_t size_type) {
 
     size_t idx = module_desc_add_string_constant(modptr, el_name);
     auto iter = modptr->interface_elements.find(el_name);
     if(iter != modptr->interface_elements.end())
         return { false, 0ul, "Interface element with name `" + el_name + "' already exists in module `" + modptr->name + "'" };
 
-    modptr->interface_elements.insert({ el_name, { int_type, int_size, const_size }});
+    modptr->interface_elements.insert({ el_name, { int_type, size_type }});
     return { true, idx, "" };
 }
 

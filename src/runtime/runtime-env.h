@@ -6,6 +6,7 @@
 
 #include <map>
 #include <string>
+#include <utility>
 
 struct runtime_env_t {
 
@@ -22,3 +23,5 @@ module_desc_t* runtime_env_create_new_module(
         const std::string& new_module_name,
         struct parse_info_t& p,
         token_t& tok);
+
+void runtime_env_print_module(std::ostream& os, runtime_env_t* rtenv, module_desc_t* modptr);
