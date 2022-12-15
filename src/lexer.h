@@ -61,7 +61,8 @@ enum class token_type_t {
     string_literal,
     unary_negative, // - lexer assumes always minus, parser can change to negate
     bit_assign,     // :=
-    function,  // one of a variety of native functions (see function_type_t below)
+    function,       // one of a variety of native functions (see function_type_t below)
+    interface_ref,  // helps shunting yard algorithm w/ left-bracket when processing interface element
 };
 
 enum class function_type_t : uint8_t {

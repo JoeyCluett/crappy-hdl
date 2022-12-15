@@ -369,6 +369,7 @@ const string_t lexer_token_type(token_type_t token_type) {
     case token_type_t::string_literal:   return "string";
     case token_type_t::bit_assign:       return "bit_assign";     // :=
     case token_type_t::function:         return "function";   // one of a number of native builtin functions
+    default: return "UNKNOWN_TOKEN_TYPE";
     }
 }
 

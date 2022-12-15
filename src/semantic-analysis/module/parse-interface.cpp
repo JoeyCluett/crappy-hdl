@@ -3,6 +3,7 @@
 #include <src/semantic-analysis/parser.h>
 #include <src/semantic-analysis/syard.h>
 #include <src/bytecode-data/opcodes.h>
+#include <src/bytecode-data/disassemble.h>
 #include <src/runtime/runtime-env.h>
 #include <src/runtime/module-desc.h>
 #include <src/lexer.h>
@@ -81,10 +82,10 @@ void parse_interface(
 
                 // requires extra processing
                 shunting_stack_t shunt_stack;
-                process_shunting_yard(rtenv, modptr, p, titer, tend, shunt_stack, { token_type_t::rbracket }, shunt_behavior_before);
+                process_shunting_yard(rtenv, modptr, p, titer, tend, shunt_stack, { token_type_t::rbracket }, shunt_behavior_after);
 
                 shunting_yard_print_eval_stack(shunt_stack);
-                while(shunt_stack.eval_stack.size() > 1ul) {
+                while(shunt_stack.op_stack.size() > 1ul) {
                     token_t t = shunt_stack.op_stack.back();
                     if(!token_is_operator(t.type))
                         throw_parse_error("Expecting operator, found " + lexer_token_desc(t, p.src), p.filename, p.src, t);
@@ -92,6 +93,8 @@ void parse_interface(
                     shunting_yard_eval_operator(rtenv, modptr, p, titer, tend, shunt_stack, t);
                     shunt_stack.op_stack.pop_back();
                 }
+
+                disassemble_bytecode(std::cout, modptr);
 
                 if((titer - 1)->type != token_type_t::rbracket || shunt_stack.eval_stack.size() != 1ul)
                     throw_parse_error("Invalid size expression starting at " + lexer_token_desc(*((&namefollow) + 1), p.src), p.filename, p.src, *((&namefollow) + 1));

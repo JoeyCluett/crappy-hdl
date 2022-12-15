@@ -136,6 +136,32 @@ void process_shunting_yard(
             }
             break;
         }
+        case token_type_t::rbracket: {
+            bool check = true;
+            while(shunt_stack.op_stack.size() > 0ul && check) {
+                token_t t = shunt_stack.op_stack.back();
+                switch(t.type) {
+                //case token_type_t::lbracket:
+
+                case token_type_t::lbrace:
+                case token_type_t::lparen:
+                    throw_parse_error("Unmatched " + lexer_token_desc(t, p.src), p.filename, p.src, t);
+
+                case token_type_t::interface_ref:
+                    
+
+                default:
+                    if(token_is_operator(t.type)) {
+                        shunting_yard_eval_operator(rtenv, modptr, p, titer, tend, shunt_stack, t);
+                        shunt_stack.op_stack.pop_back();
+                    } else {
+                        throw_parse_error("Unknown type when evaluating closing parentheses " + lexer_token_desc(t, p.src), p.filename, p.src, t);
+                    }
+                    break;
+                }
+            }
+            break;
+        }
         default:
             if(token_is_operator(tok.type)) {
                 auto cur_prec = precedence_table.find(tok.type);
