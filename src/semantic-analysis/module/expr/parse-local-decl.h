@@ -15,3 +15,10 @@ void parse_local_decl(
         parse_info_t& p,
         token_iterator_t& titer,
         const token_iterator_t& tend);
+
+void parse_local_ref_decl(
+        runtime_env_t* rtenv,
+        module_desc_t* modptr,
+        parse_info_t& p,
+        token_iterator_t& titer,
+        const token_iterator_t& tend);

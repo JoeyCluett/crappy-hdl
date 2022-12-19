@@ -6,40 +6,48 @@
 #include <set>
 #include <map>
 #include <iostream>
+#include <functional>
 
 enum assoc_t {
     assoc_left_to_right,
     assoc_right_to_left,
 };
 
-typedef std::pair<int, assoc_t> assoc_entry_t;
+//typedef std::pair<int, assoc_t> assoc_entry_t;
 
-static const std::map<token_type_t, assoc_entry_t> precedence_table = {
+struct assoc_entry_t {
+    int     first;
+    assoc_t second;
+    std::function<void(struct module_desc_t*)>
+            third;
+};
 
-    { token_type_t::period,         { 60, assoc_left_to_right }}, // .
+static const std::map<token_type_t, struct assoc_entry_t> precedence_table = {
 
-    { token_type_t::unary_negative, { 45, assoc_right_to_left }}, // -
-    { token_type_t::invert,         { 45, assoc_right_to_left }}, // ~
+    { token_type_t::period,         { 60, assoc_left_to_right, opc::operator_::get_field }}, // .
 
-    { token_type_t::divide,         { 40, assoc_left_to_right }}, // /
-    { token_type_t::star,           { 40, assoc_left_to_right }}, // *
+    { token_type_t::unary_negative, { 45, assoc_right_to_left, opc::operator_::unary_negate }}, // -
+    { token_type_t::invert,         { 45, assoc_right_to_left, opc::operator_::binary_not }}, // ~
 
-    { token_type_t::minus,          { 35, assoc_left_to_right }}, // -
-    { token_type_t::plus,           { 35, assoc_left_to_right }}, // +
+    { token_type_t::divide,         { 40, assoc_left_to_right, opc::operator_::divide }}, // /
+    { token_type_t::star,           { 40, assoc_left_to_right, opc::operator_::multiply }}, // *
 
-    { token_type_t::less_than,      { 30, assoc_left_to_right }}, // <
-    { token_type_t::less_eq,        { 30, assoc_left_to_right }}, // <=
-    { token_type_t::greater_than,   { 30, assoc_left_to_right }}, // >
-    { token_type_t::greater_eq,     { 30, assoc_left_to_right }}, // >=
+    { token_type_t::minus,          { 35, assoc_left_to_right, opc::operator_::subtract }}, // -
+    { token_type_t::plus,           { 35, assoc_left_to_right, opc::operator_::add }}, // +
 
-    { token_type_t::equiv,          { 25, assoc_left_to_right }}, // ==
-    { token_type_t::not_equiv,      { 25, assoc_left_to_right }}, // !=
+    { token_type_t::less_than,      { 30, assoc_left_to_right, opc::operator_::cmp_lt }}, // <
+    { token_type_t::less_eq,        { 30, assoc_left_to_right, opc::operator_::cmp_le }}, // <=
+    { token_type_t::greater_than,   { 30, assoc_left_to_right, opc::operator_::cmp_gt }}, // >
+    { token_type_t::greater_eq,     { 30, assoc_left_to_right, opc::operator_::cmp_ge }}, // >=
 
-    { token_type_t::ampersand,      { 20, assoc_left_to_right }}, //  &
-    { token_type_t::caret,          { 15, assoc_left_to_right }}, //  ^
-    { token_type_t::pipe,           { 10, assoc_left_to_right }}, //  |
+    { token_type_t::equiv,          { 25, assoc_left_to_right, opc::UNIMPLEMENTED }}, // ==
+    { token_type_t::not_equiv,      { 25, assoc_left_to_right, opc::UNIMPLEMENTED }}, // !=
 
-    { token_type_t::assign,         {  5, assoc_right_to_left }}, //  =
+    { token_type_t::ampersand,      { 20, assoc_left_to_right, opc::UNIMPLEMENTED }}, //  &
+    { token_type_t::caret,          { 15, assoc_left_to_right, opc::UNIMPLEMENTED }}, //  ^
+    { token_type_t::pipe,           { 10, assoc_left_to_right, opc::UNIMPLEMENTED }}, //  |
+
+    { token_type_t::assign,         {  5, assoc_right_to_left, opc::operator_::assign }}, //  =
 };
 
 static const bool is_unary_operator(token_type_t t);
@@ -63,9 +71,9 @@ void process_shunting_yard(
     while(titer < tend) {
         token_t& tok = *titer++;
 
-        //std::cout << "op stack size : " << shunt_stack.op_stack.size() << std::endl;
         //std::cout << lexer_token_desc(tok, p.src) << std::endl;
-
+        //std::cout << "op stack size : " << shunt_stack.op_stack.size() << std::endl;
+        
         if(shunt_behavior == shunt_behavior_before && end_types.find(tok.type) != end_types.end())
             return;
 
@@ -76,7 +84,7 @@ void process_shunting_yard(
             if(pr.first == false)
                 throw_parse_error("local variable with name '" + val + "' does not exist in module '" + modptr->name + "'", p.filename, p.src, tok);
 
-            opc::push_local_ref(modptr, pr.second);
+            opc::push_new_local_ref(modptr, pr.second);
             shunt_stack.eval_stack.push_back(eval_token_t::variable_reference);
             break;
         }
@@ -141,21 +149,25 @@ void process_shunting_yard(
             while(shunt_stack.op_stack.size() > 0ul && check) {
                 token_t t = shunt_stack.op_stack.back();
                 switch(t.type) {
-                //case token_type_t::lbracket:
+                //case token_type_t::lbracket: // <-- not sure if this will ever happen
 
                 case token_type_t::lbrace:
                 case token_type_t::lparen:
                     throw_parse_error("Unmatched " + lexer_token_desc(t, p.src), p.filename, p.src, t);
 
                 case token_type_t::interface_ref:
-                    
+                    //std::cout << "Found interface ref" << std::endl << std::flush;
+                    opc::set_interface_size(modptr);
+                    shunt_stack.op_stack.pop_back();
+                    break;
 
                 default:
                     if(token_is_operator(t.type)) {
                         shunting_yard_eval_operator(rtenv, modptr, p, titer, tend, shunt_stack, t);
+                        precedence_table.at(t.type).third(modptr);
                         shunt_stack.op_stack.pop_back();
                     } else {
-                        throw_parse_error("Unknown type when evaluating closing parentheses " + lexer_token_desc(t, p.src), p.filename, p.src, t);
+                        throw_parse_error("Unknown type when evaluating closing bracket " + lexer_token_desc(t, p.src), p.filename, p.src, t);
                     }
                     break;
                 }
@@ -164,6 +176,7 @@ void process_shunting_yard(
         }
         default:
             if(token_is_operator(tok.type)) {
+
                 auto cur_prec = precedence_table.find(tok.type);
                 if(cur_prec == precedence_table.end())
                     throw_parse_error("Unknown operator " + lexer_token_desc(tok, p.src), p.filename, p.src, tok);
@@ -180,6 +193,7 @@ void process_shunting_yard(
 
                         if(t_prec->second.first > cur_prec->second.first) {
                             shunting_yard_eval_operator(rtenv, modptr, p, titer, tend, shunt_stack, t);
+
                             shunt_stack.op_stack.pop_back();
                         } else {
                             loop = false;
@@ -188,11 +202,14 @@ void process_shunting_yard(
                         loop = false;
                     }
                 }
+                shunt_stack.op_stack.push_back(tok);
                 break;
             } else {
                 throw_parse_error("[DEFAULT] unknown token " + lexer_token_desc(tok, p.src), p.filename, p.src, tok);
             }
         }
+
+        //shunting_yard_print_eval_stack(shunt_stack, p.src);
 
         if(shunt_behavior == shunt_behavior_after && end_types.find(tok.type) != end_types.end())
             return;
@@ -293,7 +310,7 @@ void shunting_yard_eval_operator(
     }
 }
 
-void shunting_yard_print_eval_stack(shunting_stack_t& shunt_stack) {
+void shunting_yard_print_eval_stack(shunting_stack_t& shunt_stack, src_t& s) {
 
     std::cout << " eval stack (size=" << shunt_stack.eval_stack.size() << ")\n";
     std::cout << "========================\n";
@@ -307,5 +324,13 @@ void shunting_yard_print_eval_stack(shunting_stack_t& shunt_stack) {
         case eval_token_t::function_arg_list:  std::cout << "    function_arg_list\n"; break;
         }
     }
+    std::cout << "\n";
+
+    std::cout << " op stack (size=" << shunt_stack.op_stack.size() << ")\n";
+    std::cout << "========================\n";
+    for(auto tok : shunt_stack.op_stack) {
+        std::cout << "    " << lexer_token_desc(tok, s) << std::endl;
+    }
     std::cout << "\n\n";
+
 }

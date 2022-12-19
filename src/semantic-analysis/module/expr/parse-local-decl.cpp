@@ -39,9 +39,12 @@ void parse_local_decl(
     if(after_type.type == token_type_t::semicolon) {
         opc::clear_stack(modptr);
     } else if(after_type.type == token_type_t::assign) {
+
+        
+
         // for now, assume vector
         token_t& open_bk = *titer++;
-        if(open_bk.type != token_type_t::lbracket)
+        if(open_bk.type != token_type_t::lbrace)
             throw_parse_error("Expecting '{', found " + lexer_token_desc(open_bk, p.src), p.filename, p.src, open_bk);
 
         shunting_stack_t sstack;
@@ -51,3 +54,21 @@ void parse_local_decl(
     }
 }
 
+void parse_local_ref_decl(
+        runtime_env_t* rtenv,
+        module_desc_t* modptr,
+        parse_info_t& p,
+        token_iterator_t& titer,
+        const token_iterator_t& tend) {
+
+    token_t& local_name    = *titer++;
+    token_t& expect_assign = *titer++;
+
+    size_t local_idx = module_desc_add_string_constant(modptr, lexer_token_value(local_name, p.src));
+    opc::push_new_local_ref(modptr, local_idx);
+
+    if(expect_assign.type != token_type_t::assign)
+        throw_parse_error("Expecting '=', found " + lexer_token_desc(expect_assign, p.src), p.filename, p.src, expect_assign);
+
+
+}

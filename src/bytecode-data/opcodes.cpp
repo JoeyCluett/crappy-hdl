@@ -1,15 +1,20 @@
 #include <src/bytecode-data/opcodes.h>
 #include <src/error-util.h>
 
-static void opc_inst(struct module_desc_t* modptr, opcode_t opc) {
-    union {
-        uint16_t u16;
-        uint8_t u8[2];
-    };
+#include <stdexcept>
 
-    u16 = static_cast<uint16_t>(opc);
-    modptr->bytecode.push_back(u8[0]);
-    modptr->bytecode.push_back(u8[1]);
+static void opc_inst(struct module_desc_t* modptr, opcode_t opc) {
+    uint16_t u16 = static_cast<uint16_t>(opc);
+    if(u16 < 0b01111111) {
+        modptr->bytecode.push_back((uint8_t)(u16 & 0xFF));
+    } else if(u16 < 0b0011111111111111) {
+        modptr->bytecode.push_back((uint8_t)(((u16 >> 7) & 0xFF) | 0x80));
+        modptr->bytecode.push_back((uint8_t)(u16 & 0xFF));
+    } else {
+        modptr->bytecode.push_back((uint8_t)(((u16 >> 14) & 0xFF) | 0x80));
+        modptr->bytecode.push_back((uint8_t)(((u16 >>  7) & 0xFF) | 0x80));
+        modptr->bytecode.push_back((uint8_t)(u16 & 0xFF));
+    }
 }
 
 static void opc_size_const(struct module_desc_t* modptr, const size_t u64) {
@@ -35,20 +40,24 @@ static void opc_size_const(struct module_desc_t* modptr, const size_t u64) {
     modptr->bytecode.push_back((uint8_t)(u64 & 0x7F)); // last chunk always prepended with 0 to indicate end
 }
 
+void opc::UNIMPLEMENTED(struct module_desc_t*) {
+    throw std::runtime_error("unimplemented");
+}
+
 void opc::clear_stack(struct module_desc_t* modptr) {
     opc_inst(modptr, opcode_t::clear_stack);
 }
 
-void opc::set_interface_input_size(struct module_desc_t* modptr) {
-    opc_inst(modptr, opcode_t::set_interface_input_size);
-}
-
-void opc::set_interface_output_size(struct module_desc_t* modptr) {
-    opc_inst(modptr, opcode_t::set_interface_output_size);
+void opc::set_interface_size(struct module_desc_t* modptr) {
+    opc_inst(modptr, opcode_t::set_interface_size);
 }
 
 void opc::push_fn_args_sentinal(struct module_desc_t* modptr) {
     opc_inst(modptr, opcode_t::push_fn_args_sentinal);
+}
+
+void opc::push_vec_args_sentinal(struct module_desc_t* modptr) {
+    opc_inst(modptr, opcode_t::push_vec_args_sentinal);
 }
 
 void opc::function_call(struct module_desc_t* modptr, function_type_t fn_name) {
@@ -66,8 +75,8 @@ void opc::push_out_ref(struct module_desc_t* modptr, const size_t ref) {
     opc_size_const(modptr, ref);
 }
 
-void opc::push_local_ref(struct module_desc_t* modptr, const size_t ref) {
-    opc_inst(modptr, opcode_t::push_local_ref);
+void opc::push_new_local_ref(struct module_desc_t* modptr, const size_t ref) {
+    opc_inst(modptr, opcode_t::push_new_local_ref);
     opc_size_const(modptr, ref);
 }
 
@@ -106,3 +115,24 @@ void opc::push_new_local_vector(struct module_desc_t* modptr, const size_t ref) 
     opc_inst(modptr, opcode_t::push_new_local_vector);
     opc_size_const(modptr, ref);
 }
+
+namespace opc {
+namespace operator_ {
+
+    void add(struct module_desc_t* modptr)       { opc_inst(modptr, opcode_t::operator_add);       }
+    void subtract(struct module_desc_t* modptr)  { opc_inst(modptr, opcode_t::operator_subtract);  }
+    void multiply(struct module_desc_t* modptr)  { opc_inst(modptr, opcode_t::operator_multiply);  }
+    void divide(struct module_desc_t* modptr)    { opc_inst(modptr, opcode_t::operator_divide);    }
+    void assign(struct module_desc_t* modptr)    { opc_inst(modptr, opcode_t::operator_assign);    }
+    void get_field(struct module_desc_t* modptr) { opc_inst(modptr, opcode_t::operator_get_field); }
+
+    void cmp_lt(struct module_desc_t* modptr)    { opc_inst(modptr, opcode_t::operator_cmp_lt);    }
+    void cmp_le(struct module_desc_t* modptr)    { opc_inst(modptr, opcode_t::operator_cmp_le);    }
+    void cmp_gt(struct module_desc_t* modptr)    { opc_inst(modptr, opcode_t::operator_cmp_gt);    }
+    void cmp_ge(struct module_desc_t* modptr)    { opc_inst(modptr, opcode_t::operator_cmp_ge);    }
+
+    void unary_negate(struct module_desc_t* modptr) { opc_inst(modptr, opcode_t::operator_unary_negate); }
+    void binary_not(struct module_desc_t* modptr)   { opc_inst(modptr, opcode_t::operator_binary_not); }
+
+} // namespace operator
+} // namespace opc

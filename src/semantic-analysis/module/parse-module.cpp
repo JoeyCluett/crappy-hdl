@@ -33,9 +33,8 @@ void parse_module(
 
     parse_arg_list(rtenv, mod, p, titer, tend);
     parse_interface(rtenv, mod, p, titer, tend);
+    parse_body(rtenv, mod, p, titer, tend);
 
     disassemble_bytecode(std::cout, mod);
-
-    parse_body(rtenv, mod, p, titer, tend);
 }
 

@@ -22,7 +22,6 @@ void disassemble_bytecode(std::ostream& os, struct module_desc_t* modptr) {
     auto opc_end  = modptr->bytecode.end();
 
     while(opc_iter < opc_end) {
-
         switch(dis_get_opcode(opc_iter)) {
         case opcode_t::clear_stack: os << "clear_stack\n"; break;
         case opcode_t::push_in_ref: { // <opc> <ref>
@@ -61,12 +60,12 @@ void disassemble_bytecode(std::ostream& os, struct module_desc_t* modptr) {
             os << "push_fn_args_sentinal\n";
             break;
 
-        case opcode_t::set_interface_input_size:
-            os << "set_int_in_size\n";
+        case opcode_t::push_vec_args_sentinal: // <opc>
+            os << "push_vec_args_sentinal\n";
             break;
 
-        case opcode_t::set_interface_output_size:
-            os << "set_int_out_size\n";
+        case opcode_t::set_interface_size: // <opc>
+            os << "set_interface_size\n";
             break;
 
         case opcode_t::operator_add:      os << "add\n";      break;
@@ -113,16 +112,17 @@ void disassemble_bytecode(std::ostream& os, struct module_desc_t* modptr) {
 static opcode_t dis_get_opcode(
         std::vector<uint8_t>::iterator& iter) {
 
-    union {
-        uint16_t opc;
-        size_t   ref;
-        uint8_t u8[2];
-    } u;
+    uint16_t u16 = 0;
+    while(1) {
+        uint8_t u = *iter++;
+        u16 = (u16 << 7) | (u & 0x7F);
 
-    u.u8[0] = *iter++;
-    u.u8[1] = *iter++;
+        if(!(u & 0x80)) {
+            break;
+        }
+    }
 
-    return (opcode_t)u.opc;
+    return static_cast<opcode_t>(u16);
 }
 
 static std::string dis_get_ref_name(

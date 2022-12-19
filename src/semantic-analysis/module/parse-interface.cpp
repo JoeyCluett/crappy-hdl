@@ -30,8 +30,6 @@ void parse_interface(
         case expect_in_out: {
             token_t& inout = *titer++;
 
-            // TODO : inout could also be "start"
-
             if(inout.type == token_type_t::keyword_start) {
                 std::cout << *modptr << std::flush;
                 return;
@@ -82,28 +80,26 @@ void parse_interface(
 
                 // requires extra processing
                 shunting_stack_t shunt_stack;
+                namefollow.type = token_type_t::interface_ref;
+                shunt_stack.op_stack.push_back(namefollow);
+
                 process_shunting_yard(rtenv, modptr, p, titer, tend, shunt_stack, { token_type_t::rbracket }, shunt_behavior_after);
 
-                shunting_yard_print_eval_stack(shunt_stack);
-                while(shunt_stack.op_stack.size() > 1ul) {
+                while(shunt_stack.op_stack.size() > 0ul) {
                     token_t t = shunt_stack.op_stack.back();
                     if(!token_is_operator(t.type))
                         throw_parse_error("Expecting operator, found " + lexer_token_desc(t, p.src), p.filename, p.src, t);
-                    
+
                     shunting_yard_eval_operator(rtenv, modptr, p, titer, tend, shunt_stack, t);
                     shunt_stack.op_stack.pop_back();
                 }
-
-                disassemble_bytecode(std::cout, modptr);
 
                 if((titer - 1)->type != token_type_t::rbracket || shunt_stack.eval_stack.size() != 1ul)
                     throw_parse_error("Invalid size expression starting at " + lexer_token_desc(*((&namefollow) + 1), p.src), p.filename, p.src, *((&namefollow) + 1));
 
                 shunt_stack.eval_stack.clear();
 
-                inout_type == module_desc_t::interface_type_t::in ?
-                        opc::set_interface_input_size(modptr) :
-                        opc::set_interface_output_size(modptr);
+                //opc::set_interface_size(modptr);
                 opc::clear_stack(modptr);
 
                 token_t& after_arr = *titer++;

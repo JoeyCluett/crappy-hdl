@@ -321,6 +321,7 @@ const string_t lexer_token_type(token_type_t token_type) {
     case token_type_t::keyword_uinteger: return "typename:uint";
     case token_type_t::keyword_string:   return "typename:string";
     case token_type_t::keyword_bit:      return "typename:bit";
+    case token_type_t::keyword_vector:   return "typename:vector";
     case token_type_t::keyword_module:   return "keyword:module";
     case token_type_t::keyword_out:      return "keyword:out";
     case token_type_t::keyword_in:       return "keyword:in";
@@ -369,6 +370,7 @@ const string_t lexer_token_type(token_type_t token_type) {
     case token_type_t::string_literal:   return "string";
     case token_type_t::bit_assign:       return "bit_assign";     // :=
     case token_type_t::function:         return "function";   // one of a number of native builtin functions
+    case token_type_t::interface_ref:    return "interface_ref"; 
     default: return "UNKNOWN_TOKEN_TYPE";
     }
 }

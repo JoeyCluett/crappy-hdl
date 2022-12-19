@@ -17,5 +17,9 @@ void parse_body(
     switch(first_token.type) {
     case token_type_t::keyword_local:
         parse_local_decl(rtenv, modptr, p, titer, tend);
+        break;
+
+    case token_type_t::keyword_ref:
+        parse_local_ref_decl(rtenv, modptr, p, titer, tend);
     }
 }

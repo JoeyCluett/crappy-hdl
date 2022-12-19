@@ -47,6 +47,7 @@ void shunting_yard_eval_operator(
         shunting_stack_t& shunt_stack,
         const token_t& t);
 
-void shunting_yard_print_eval_stack(shunting_stack_t& shunt_stack);
+//void shunting_yard_print_eval_stack(shunting_stack_t& shunt_stack);
+void shunting_yard_print_eval_stack(shunting_stack_t& shunt_stack, src_t& s);
 
 const bool token_is_operator(token_type_t t);
