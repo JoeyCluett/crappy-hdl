@@ -5,20 +5,20 @@ module adder(width : integer)
 start
 
     // vectors can hold arbitrary stuff, 0-indexed as God intended
-    //local vecstuff : vector{ 0, @1001, module.full_adder() };
+    local vecstuff : vector = vector( 0, @1001, module.full_adder() );
 
     local adders: vector;
     ref current_cin = in.cin;
 
     local i : integer;
-    for(i = 0; i < width; i = i + 1) start
+    for i = 0; i < width; i = i + 1; start
         push(adders, module.full_adder()); // push an instance of full_adder onto adders vector
 
         last(adders).cin = current_cin;
         last(adders).a   = in.a[i];
         last(adders).b   = in.b[i];
 
-        out.sum[i]  = last(adders).sum;   // save output bit
+        out.sum[i]  = last(adders).sum;  // save output bit
         current_cin = last(adders).cout; // update carry for next adder
     end
 
