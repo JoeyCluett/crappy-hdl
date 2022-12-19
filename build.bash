@@ -38,17 +38,17 @@ if [[ $1 == "--help" ]]; then
 elif [[ $1 == "--asan" ]]; then
 
     printf "\n${MAG}Generating Makefile with ${GRN}ASAN${MAG} options enabled${RST}\n\n"
-    STDOPTS="-fPIE -lm -I. -std=c++11 -O1 -g -fsanitize=address"
+    STDOPTS="-fPIE -lm -I. -std=c++14 -O1 -g -fsanitize=address"
 
 elif [[ $1 == "--valgrind" ]]; then
 
     printf "\n${MAG}Generating Makefile with debug options compatible with ${GRN}Valgrind${RST}\n\n"
-    STDOPTS="-fPIE -lm -I. -std=c++11 -O0 -DTRACE_ON_EXIT -g"
+    STDOPTS="-fPIE -lm -I. -std=c++14 -O0 -DTRACE_ON_EXIT -g"
 
 elif [[ $1 == "--release" ]]; then
 
     printf "\n${MAG}Generating Makefile with standard build options enabled${RST}\n\n"
-    STDOPTS="-fPIE -I. -std=c++11 -O3"
+    STDOPTS="-fPIE -I. -std=c++14 -O3"
 
 else
     printf "\nrun build script with option ${BLU}--help${RST} to see available options\n\n"
