@@ -16,13 +16,15 @@ int main(int argc, char* argv[]) {
 //    std::string filename = "hdl/riscv-decoder.chdl";
     std::string filename = "hdl/adders.chdl";
 
+    runtime_env_t* renv = NULL;
+
     try {
         auto src    = read_hdl_file_contents(filename);
         std::vector<token_t> tkns;
         lexical_analyze(src, filename, tkns);
 //        print_lexer_tokens(tkns);
 
-        runtime_env_t* renv = new runtime_env_t;
+        renv = new runtime_env_t;
 
         parser_analyze(renv, src, filename, tkns);
 
@@ -30,10 +32,12 @@ int main(int argc, char* argv[]) {
     }
     catch(ParserError_t& parse_error) {
         handle_parse_error(std::cout, parse_error);
+        delete renv;
         return 1;
     }
     catch(LexerError_t& lexer_error) {
         handle_lexer_error(std::cout, lexer_error);
+        delete renv;
         return 1;
     }
 
