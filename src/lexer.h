@@ -24,6 +24,7 @@ enum class token_type_t {
     keyword_local,
     keyword_ref,
     keyword_builtin,
+    keyword_for,
     keyword_true_,  // true literal
     keyword_false_, // false literal
     variable_name,
@@ -63,6 +64,7 @@ enum class token_type_t {
     bit_assign,     // :=
     function,       // one of a variety of native functions (see function_type_t below)
     interface_ref,  // helps shunting yard algorithm w/ left-bracket when processing interface element
+    module_ref,     // ... when processing arguments to module instance, token is name of module to use
 };
 
 enum class function_type_t : uint8_t {

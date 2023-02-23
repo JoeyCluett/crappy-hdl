@@ -9,17 +9,24 @@
 enum class opcode_t : uint16_t {
     clear_stack,
 
+    pop_scope, // reduce scope by one, this catches all for loops and if statements
+    return_,   // returns from module, returning from module before outputs are assigned is bad
+
     push_in_ref,
     push_out_ref,
     push_new_local_ref,
     push_local_ref,
     push_uinteger,
+    push_bit_literal,
     assign_in_ref,
     assign_out_ref,
 
     push_fn_args_sentinal,
     push_vec_args_sentinal,
+    push_arr_sentinal,
+    push_module_args_sentinal,
     function_call,
+    module_call,
     set_interface_size,
 
     operator_add,
@@ -37,11 +44,17 @@ enum class opcode_t : uint16_t {
 
     operator_unary_negate,
     operator_binary_not,
+    operator_binary_xor,
+    operator_binary_and,
+    operator_binary_or,
+
+    operator_range_desc, // begin:end
 
     push_new_local_integer,
     push_new_local_uinteger,
     push_new_local_string,
     push_new_local_vector,
+    push_new_local_module,
 
 };
 
@@ -51,10 +64,14 @@ namespace opc {
 
     void clear_stack(struct module_desc_t* modptr);
 
+    void pop_scope(struct module_desc_t* modptr);
+    void return_(struct module_desc_t* modptr);
+
     void push_in_ref(struct module_desc_t* modptr, const size_t ref);
     void push_out_ref(struct module_desc_t* modptr, const size_t ref);
     void push_local(struct module_desc_t* modptr, const size_t ref);
     void push_uinteger(struct module_desc_t* modptr, size_t u64);
+    void push_bit_literal(struct module_desc_t* modptr, size_t ref);
 
     void push_new_local(struct module_desc_t* modptr, token_type_t t, const size_t ref);
     void push_new_local_ref(struct module_desc_t* modptr, const size_t ref);
@@ -62,10 +79,14 @@ namespace opc {
     void push_new_local_uinteger(struct module_desc_t* modptr, const size_t ref);
     void push_new_local_string(struct module_desc_t* modptr, const size_t ref);
     void push_new_local_vector(struct module_desc_t* modptr, const size_t ref);
+    void push_new_local_module(struct module_desc_t* modptr, const size_t ref);
 
     void push_fn_args_sentinal(struct module_desc_t* modptr);
     void push_vec_args_sentinal(struct module_desc_t* modptr);
+    void push_arr_sentinal(struct module_desc_t* modptr);
+    void push_module_args_sentinal(struct module_desc_t* modptr);
     void function_call(struct module_desc_t* modptr, function_type_t fn_name);
+    void module_call(struct module_desc_t* modptr, size_t module_ref);
     void set_interface_size(struct module_desc_t* modptr);
 
     namespace operator_ {
@@ -83,6 +104,12 @@ namespace opc {
 
         void unary_negate(struct module_desc_t* modptr);
         void binary_not(struct module_desc_t* modptr);
+
+        void binary_xor(struct module_desc_t* modptr);
+        void binary_and(struct module_desc_t* modptr);
+        void binary_or(struct module_desc_t* modptr);
+
+        void range_desc(struct module_desc_t* modptr);
 
     } // namespace operator
 

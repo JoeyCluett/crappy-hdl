@@ -21,7 +21,8 @@ module_desc_t* runtime_env_create_new_module(
         throw_parse_error("module with name '" + new_module_name + "' already exists", p.filename, p.src, tok);
 
     module_desc_t* modptr = new module_desc_t;
-    modptr->name = new_module_name;
+    modptr->name         = new_module_name;
+    modptr->scope_levels = 1;
     renv->modules.insert({ new_module_name, modptr }); // save pointer in runtime environment
     return modptr;
 }

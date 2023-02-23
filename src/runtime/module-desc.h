@@ -35,6 +35,8 @@ struct module_desc_t {
             argument_list;
 
     std::vector<uint8_t> bytecode;
+
+    long int scope_levels = 1;
 };
 
 std::ostream& operator<<(std::ostream& os, const module_desc_t& modptr);

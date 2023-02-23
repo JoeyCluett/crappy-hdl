@@ -1,9 +1,5 @@
 
 module SimplestPossibleModule(void)
-
-    in: inbit, inb[0b011];
-    out: outbit, outb[45];
-
 start
 end
 

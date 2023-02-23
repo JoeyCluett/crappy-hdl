@@ -331,6 +331,7 @@ const string_t lexer_token_type(token_type_t token_type) {
     case token_type_t::keyword_local:    return "keyword:local";
     case token_type_t::keyword_ref:      return "keyword:ref";
     case token_type_t::keyword_builtin:  return "keyword:builtin";
+    case token_type_t::keyword_for:      return "keyword:for";
     case token_type_t::keyword_true_:    return "keyword:true";
     case token_type_t::keyword_false_:   return "keyword:false";
 
@@ -370,7 +371,8 @@ const string_t lexer_token_type(token_type_t token_type) {
     case token_type_t::string_literal:   return "string";
     case token_type_t::bit_assign:       return "bit_assign";     // :=
     case token_type_t::function:         return "function";   // one of a number of native builtin functions
-    case token_type_t::interface_ref:    return "interface_ref"; 
+    case token_type_t::interface_ref:    return "interface_ref";
+    case token_type_t::module_ref:       return "module_ref";
     default: return "UNKNOWN_TOKEN_TYPE";
     }
 }
@@ -489,6 +491,7 @@ static const std::map<std::string, token_type_t> keywords = {
     { "local",    token_type_t::keyword_local    },
     { "ref",      token_type_t::keyword_ref      },
     { "builtin",  token_type_t::keyword_builtin  },
+    { "for",      token_type_t::keyword_for      },
     { "true",     token_type_t::keyword_true_    },
     { "false",    token_type_t::keyword_false_   },
     { "vector",   token_type_t::keyword_vector   },

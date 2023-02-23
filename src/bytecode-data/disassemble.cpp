@@ -22,6 +22,8 @@ void disassemble_bytecode(std::ostream& os, struct module_desc_t* modptr) {
     auto opc_end  = modptr->bytecode.end();
 
     while(opc_iter < opc_end) {
+        os << "[" << ((size_t)(opc_iter - modptr->bytecode.begin())) << "] : ";
+
         switch(dis_get_opcode(opc_iter)) {
         case opcode_t::clear_stack: os << "clear_stack\n"; break;
         case opcode_t::push_in_ref: { // <opc> <ref>
@@ -36,9 +38,15 @@ void disassemble_bytecode(std::ostream& os, struct module_desc_t* modptr) {
             break;
         }
 
+        case opcode_t::push_new_local_ref: {
+            size_t ref = dis_get_ref(opc_iter, opc_end);
+            os << "push_new_local_ref [" << dis_get_ref_name(modptr, ref) << "]\n";
+            break;
+        }
+
         case opcode_t::push_local_ref: { // <opc> <ref>
             size_t ref = dis_get_ref(opc_iter, opc_end);
-            os << "push_local_ref [" << dis_get_ref_name(modptr, ref) << "]\n";
+            os << "push_local [" << dis_get_ref_name(modptr, ref) << "]\n";
             break;
         }
 
@@ -68,6 +76,19 @@ void disassemble_bytecode(std::ostream& os, struct module_desc_t* modptr) {
             os << "set_interface_size\n";
             break;
 
+        case opcode_t::pop_scope:         os << "pop_scope\n";         break;
+        case opcode_t::return_:           os << "return\n";            break;
+        case opcode_t::push_arr_sentinal: os << "push_arr_sentinal\n"; break;
+        case opcode_t::function_call:     os << "function_call\n";     break;
+
+        case opcode_t::operator_get_field:    os << "get_field\n"; break;
+        case opcode_t::operator_unary_negate: os << "negate\n";    break;
+        case opcode_t::operator_binary_not:   os << "not\n";       break;
+
+        case opcode_t::operator_binary_and: os << "binary_and\n"; break;
+        case opcode_t::operator_binary_xor: os << "binary_xor\n"; break;
+        case opcode_t::operator_binary_or:  os << "binary_or\n";  break;
+
         case opcode_t::operator_add:      os << "add\n";      break;
         case opcode_t::operator_subtract: os << "subtract\n"; break;
         case opcode_t::operator_multiply: os << "multiply\n"; break;
@@ -78,6 +99,8 @@ void disassemble_bytecode(std::ostream& os, struct module_desc_t* modptr) {
         case opcode_t::operator_cmp_le: os << "cmp_le\n"; break;
         case opcode_t::operator_cmp_gt: os << "cmp_gt\n"; break;
         case opcode_t::operator_cmp_ge: os << "cmp_ge\n"; break;
+
+        case opcode_t::operator_range_desc: os << "range\n"; break;
 
         case opcode_t::push_new_local_integer: { // <opc> <ref>
             size_t ref = dis_get_ref(opc_iter, opc_end);
@@ -103,8 +126,23 @@ void disassemble_bytecode(std::ostream& os, struct module_desc_t* modptr) {
             break;
         }
 
-        default:
-            os << "UNKNOWN OPCODE\n"; break;
+        case opcode_t::module_call: { // <opc> <ref>
+            size_t ref = dis_get_ref(opc_iter, opc_end);
+            os << "module_call [" << dis_get_ref_name(modptr, ref) << "]\n";
+            break;
+        }
+
+        case opcode_t::push_module_args_sentinal:
+            os << "push_module_args_sentinal\n";
+            break;
+
+        case opcode_t::push_new_local_module:
+            size_t ref = dis_get_ref(opc_iter, opc_end);
+            os << "push_new_local_module [" << dis_get_ref_name(modptr, ref) << "]\n";
+            break;
+
+        //default:
+        //    os << "UNKNOWN OPCODE\n"; break;
         }
     }
 }

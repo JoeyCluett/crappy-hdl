@@ -9,16 +9,10 @@
 #include <vector>
 #include <string>
 
-void parse_local_decl(
+void parse_local_or_ref_decl(
         runtime_env_t* rtenv,
         module_desc_t* modptr,
         parse_info_t& p,
         token_iterator_t& titer,
-        const token_iterator_t& tend);
-
-void parse_local_ref_decl(
-        runtime_env_t* rtenv,
-        module_desc_t* modptr,
-        parse_info_t& p,
-        token_iterator_t& titer,
-        const token_iterator_t& tend);
+        const token_iterator_t& tend,
+        token_type_t first_type);

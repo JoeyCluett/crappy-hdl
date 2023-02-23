@@ -9,7 +9,7 @@
 
 std::ostream& operator<<(std::ostream& os, const module_desc_t& modptr) {
 
-    os << "module : " << modptr.name << "\n";
+    os << "\n\n\nmodule : " << modptr.name << "\n";
     os << "argument list:\n";
     for(auto& p : modptr.argument_list) {
         os << "    " << modptr.constants.at(p.first) << ", type[";

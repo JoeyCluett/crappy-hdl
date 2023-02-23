@@ -15,7 +15,8 @@ enum eval_token_t {
     module_reference,
     left_paren,
     left_bracket,
-    function_arg_list,
+    function_arg_sentinal,
+    arr_access_sentinal,
 };
 
 struct shunting_stack_t {
