@@ -101,7 +101,7 @@ void process_shunting_yard(
             std::string val = lexer_token_value(tok, p.src);
             auto pr         = module_desc_get_idx_of_string(modptr, val);
             if(pr.first == false)
-                throw_parse_error("local variable with name '" + val + "' does not exist in module '" + modptr->name + "'", p.filename, p.src, tok);
+                throw_parse_error("local variable with name `" + val + "' does not exist in module `" + modptr->name + "'", p.filename, p.src, tok);
 
             opc::push_local(modptr, pr.second);
             shunt_stack.eval_stack.push_back(eval_token_t::variable_reference);
@@ -109,20 +109,123 @@ void process_shunting_yard(
         }
 
         case token_type_t::semicolon:
-            while(shunt_stack.op_stack.size() > 0) {
-                token_t c = shunt_stack.op_stack.back();
-                if(token_is_operator(c.type)) {
-                    //std::cout << "    evaluating operator " << lexer_token_desc(c, p.src) << std::endl;
-                    shunting_yard_eval_operator(rtenv, modptr, p, titer, tend, shunt_stack, c);
-                    precedence_table.at(c.type).third(modptr);
-                    shunt_stack.op_stack.pop_back();
-                } else {
-                    throw_parse_error("Expecting operator, found " + lexer_token_desc(c, p.src),
-                            p.filename, p.src, c);
-                }
-            }
+            shunting_yard_eval_semicolon(rtenv, modptr, p, titer, tend, shunt_stack);
             opc::clear_stack(modptr);
             break;
+
+        case token_type_t::keyword_ref: {
+            token_t local_name = *titer++;
+            token_t& expect_assign = *titer;
+            if(expect_assign.type != token_type_t::assign)
+                throw_parse_error(
+                        "Expecting `=', found " + lexer_token_desc(expect_assign, p.src),
+                        p.filename, p.src, expect_assign);
+
+            size_t local_idx = module_desc_add_string_constant(modptr, lexer_token_value(local_name, p.src));
+            opc::push_new_local_ref(modptr, local_idx);
+            shunt_stack.eval_stack.push_back(eval_token_t::variable_reference);
+            break;
+        }
+
+        case token_type_t::keyword_local: // local declaration/definition
+        {
+            // local varname = ...
+            // local varname : typespec;
+            // local varname : typespec = ...;
+
+            token_t& varname = *titer++;
+            if(varname.type != token_type_t::variable_name)
+                throw_parse_error("Expecting variable name, found " + lexer_token_desc(varname, p.src),
+                        p.filename, p.src, varname);
+
+            size_t varname_idx = module_desc_add_string_constant(modptr, lexer_token_value(varname, p.src));
+
+            token_t& assign_or_colon = *titer++;
+            if(assign_or_colon.type == token_type_t::assign) {
+                opc::push_new_local_any(modptr, varname_idx);
+                shunt_stack.op_stack.push_back(assign_or_colon); // assign operator
+                shunt_stack.eval_stack.push_back(eval_token_t::variable_reference);
+                break;
+            } else if(assign_or_colon.type == token_type_t::semicolon) {
+                // local varname; <-- this is an error
+                throw_parse_error("Cannot default intialize local without explicit type", p.filename, p.src, varname);                
+            } else if(assign_or_colon.type != token_type_t::colon) {
+                throw_parse_error("Expecting `=' or `:', found " + lexer_token_desc(assign_or_colon, p.src),
+                        p.filename, p.src, assign_or_colon);
+            }
+
+            token_t& typespec = *titer++;
+
+            if(typespec.type == token_type_t::keyword_integer) {         opc::push_new_local_integer(modptr, varname_idx);
+            } else if(typespec.type == token_type_t::keyword_uinteger) { opc::push_new_local_uinteger(modptr, varname_idx);
+            } else if(typespec.type == token_type_t::keyword_string) {   opc::push_new_local_string(modptr, varname_idx);
+            } else if(typespec.type == token_type_t::keyword_vector) {   opc::push_new_local_vector(modptr, varname_idx);
+            } else {
+                throw_parse_error(
+                        "Expecting type specifier, found " + lexer_token_desc(typespec, p.src),
+                        p.filename, p.src, typespec);
+            }
+
+            shunt_stack.eval_stack.push_back(eval_token_t::variable_reference);            
+
+            token_t& semic_or_assign = *titer++;
+
+            if(semic_or_assign.type == token_type_t::semicolon) {
+                titer--;
+                break; // let other parts of shunting yard handle semicolon
+            } else if(semic_or_assign.type != token_type_t::assign) {
+                throw_parse_error("Expecting `;' or `=', found " + lexer_token_desc(semic_or_assign, p.src), p.filename, p.src, semic_or_assign);
+            }
+
+            titer--; // shunting yard will handle assignment operator
+            break;
+        }
+
+        case token_type_t::keyword_vector:
+        {
+            token_t expect_lparen = *titer++;
+            if(expect_lparen.type != token_type_t::lparen) {
+                throw_parse_error("Expecting `(', found " + lexer_token_desc(expect_lparen, p.src), p.filename, p.src, expect_lparen);
+            }
+
+            shunt_stack.op_stack.push_back(tok);
+            //opc::push_fn_args_sentinal(modptr);
+            opc::push_vec_args_sentinal(modptr);
+            shunt_stack.eval_stack.push_back(eval_token_t::function_arg_sentinal);
+
+            break;
+        }
+
+        case token_type_t::keyword_module:
+        {
+            if(shunt_stack.eval_stack.size() == 0ul || shunt_stack.op_stack.size() == 0ul)
+                throw_parse_error(
+                        "Module instance must be part of assignment to local",
+                        p.filename, p.src, tok);
+
+            token_t& expect_dot = *titer++;
+            if(expect_dot.type != token_type_t::period)
+                throw_parse_error("Expecting `.', found " + lexer_token_desc(expect_dot, p.src),
+                        p.filename, p.src, expect_dot);
+
+            token_t& module_name = *titer++;
+
+            if(module_name.type != token_type_t::variable_name)
+                throw_parse_error("Expecting module name, found " + lexer_token_desc(module_name, p.src), p.filename, p.src, module_name);
+
+            token_t& expect_lparen = *titer++;
+
+            if(expect_lparen.type != token_type_t::lparen)
+                throw_parse_error("Expecting `(', found " + lexer_token_desc(expect_lparen, p.src), p.filename, p.src, expect_lparen);
+
+            opc::push_module_args_sentinal(modptr);
+
+            module_name.type = token_type_t::module_ref;
+            shunt_stack.op_stack.push_back(module_name);
+            shunt_stack.eval_stack.push_back(eval_token_t::module_reference);
+
+            break;
+        }
 
         case token_type_t::keyword_in:
         case token_type_t::keyword_out:
@@ -189,7 +292,7 @@ void process_shunting_yard(
                     if(iter == precedence_table.end()) {
                         throw_parse_error(
                                 "INTERNAL ERROR : OPERATOR " + lexer_token_desc(t, p.src) + 
-                                    "MISSING FROM PRECENDENCE TABLE",
+                                    " MISSING FROM PRECENDENCE TABLE",
                                 p.filename, p.src, t);
                     } else {
                         iter->second.third(modptr); // <-- generate opcode
@@ -246,6 +349,35 @@ void process_shunting_yard(
                     INTERNAL_ERR();
 
                 opc::function_call(modptr, std::get<2>(tup));
+
+                while(
+                        shunt_stack.eval_stack.size() > 0ul &&
+                        shunt_stack.eval_stack.back() != eval_token_t::function_arg_sentinal)
+                {
+                    shunt_stack.eval_stack.pop_back();
+                }
+
+                shunt_stack.op_stack.pop_back();
+                shunt_stack.eval_stack.pop_back(); // remove the function args sentinal
+                shunt_stack.eval_stack.push_back(eval_token_t::variable_reference);
+
+                break;
+            }
+
+            case token_type_t::keyword_vector: {
+                opc::function_call(modptr, function_type_t::vector);
+                shunt_stack.op_stack.pop_back();
+
+                while(
+                        shunt_stack.eval_stack.size() > 0ul &&
+                        shunt_stack.eval_stack.back() != eval_token_t::function_arg_sentinal)
+                {
+                    // TODO : check types that we are discarding
+                    shunt_stack.eval_stack.pop_back();
+                }
+
+                shunt_stack.eval_stack.pop_back(); // remove the function args sentinal
+                shunt_stack.eval_stack.push_back(eval_token_t::variable_reference);
                 break;
             }
 
@@ -272,20 +404,28 @@ void process_shunting_yard(
                 token_t t = shunt_stack.op_stack.back();
                 switch(t.type) {
                 case token_type_t::lbracket:
-                    while(shunt_stack.eval_stack.size() > 0) {
-                        eval_token_t et = shunt_stack.eval_stack.back();
-                        shunt_stack.eval_stack.pop_back();
-                        if(et == eval_token_t::arr_access_sentinal) {
-                            if(shunt_stack.eval_stack.back() != eval_token_t::variable_reference) {
-                                throw_parse_error("Unable to index non-array entity " + lexer_token_desc(t, p.src),
-                                        p.filename, p.src, t);
-                            }
-                            // just leave the variable reference on the eval stack
+                    while(shunt_stack.eval_stack.size() > 1ul) {
+                        if(shunt_stack.eval_stack.back() != eval_token_t::arr_access_sentinal) {
+                            shunt_stack.eval_stack.pop_back();
+                        } else {
+                            break;
                         }
                     }
-                    // if we get to this point, there was no access sentinal
-                    throw_parse_error("Unmatched " + lexer_token_desc(t, p.src),
-                            p.filename, p.src, t);
+
+                    if(shunt_stack.eval_stack.size() <= 1ul || shunt_stack.eval_stack.back() != eval_token_t::arr_access_sentinal)
+                        throw_parse_error("Unmatched `]'", p.filename, p.src, t);
+
+                    shunt_stack.eval_stack.pop_back();
+                    if(shunt_stack.eval_stack.back() != eval_token_t::variable_reference)
+                        throw_parse_error("Unable to index non-array entity " + lexer_token_desc(t, p.src),
+                                p.filename, p.src, t);
+
+                    // leave variable reference on eval_stack
+
+                    opc::operator_::index_call(modptr);
+                    shunt_stack.op_stack.pop_back(); // remove lbracket from op_stack
+                    check = false;
+                    break;                    
 
                 case token_type_t::lbrace:
                 case token_type_t::lparen:
@@ -355,6 +495,27 @@ void process_shunting_yard(
 
         if(shunt_behavior == shunt_behavior_after && end_types.find(tok.type) != end_types.end())
             return;
+    }
+}
+
+void shunting_yard_eval_semicolon(
+        struct runtime_env_t* rtenv,
+        struct module_desc_t* modptr,
+        struct parse_info_t& p,
+        token_iterator_t& titer,
+        const token_iterator_t& tend,
+        shunting_stack_t& shunt_stack) {
+
+    while(shunt_stack.op_stack.size() > 0) {
+        token_t c = shunt_stack.op_stack.back();
+        if(token_is_operator(c.type)) {
+            shunting_yard_eval_operator(rtenv, modptr, p, titer, tend, shunt_stack, c);
+            precedence_table.at(c.type).third(modptr);
+            shunt_stack.op_stack.pop_back();
+        } else {
+            throw_parse_error("Expecting operator, found " + lexer_token_desc(c, p.src),
+                    p.filename, p.src, c);
+        }
     }
 }
 

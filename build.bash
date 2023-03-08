@@ -16,7 +16,6 @@ SRC_FOLDERS=(                         \
     src                               \
     src/semantic-analysis             \
     src/semantic-analysis/module      \
-    src/semantic-analysis/module/expr \
     src/runtime                       \
     src/bytecode-data                 \
 )
@@ -38,17 +37,21 @@ if [[ $1 == "--help" ]]; then
 elif [[ $1 == "--asan" ]]; then
 
     printf "\n${MAG}Generating Makefile with ${GRN}ASAN${MAG} options enabled${RST}\n\n"
-    STDOPTS="-fPIE -lm -I. -std=c++14 -O1 -Wswitch-enum -g -fsanitize=address"
+    #STDOPTS="-fPIE -lm -I. -std=c++14 -O1 -Wswitch-enum -g -fsanitize=address"
+    STDOPTS="-fPIE -lm -I. -std=c++14 -O1 -g -fsanitize=address"
 
 elif [[ $1 == "--valgrind" ]]; then
 
     printf "\n${MAG}Generating Makefile with debug options compatible with ${GRN}Valgrind${RST}\n\n"
-    STDOPTS="-fPIE -lm -I. -std=c++14 -O0 -Wswitch-enum -DTRACE_ON_EXIT -g"
+    #STDOPTS="-fPIE -lm -I. -std=c++14 -O0 -Wswitch-enum -DTRACE_ON_EXIT -g"
+    STDOPTS="-fPIE -lm -I. -std=c++14 -O0 -DTRACE_ON_EXIT -g"
+
 
 elif [[ $1 == "--release" ]]; then
 
     printf "\n${MAG}Generating Makefile with standard build options enabled${RST}\n\n"
-    STDOPTS="-fPIE -lm -I. -std=c++14 -O2 -Wswitch-enum"
+    #STDOPTS="-fPIE -lm -I. -std=c++14 -O2 -Wswitch-enum"
+    STDOPTS="-fPIE -lm -I. -std=c++14 -O2"
 
 else
     printf "\nrun build script with option ${BLU}--help${RST} to see available options\n\n"

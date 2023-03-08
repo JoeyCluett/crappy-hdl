@@ -36,6 +36,8 @@ struct module_desc_t {
 
     std::vector<uint8_t> bytecode;
 
+    std::map<size_t, size_t> jump_targets;
+
     long int scope_levels = 1;
 };
 
@@ -64,5 +66,12 @@ void module_desc_add_argument_desc(
         token_t& arg_name,
         token_t& arg_type);
 
+size_t module_desc_alloc_jump_target(module_desc_t* modptr);
 
+size_t module_desc_alloc_jump_label(
+        module_desc_t* modptr);
 
+void module_desc_define_jump_label(
+        module_desc_t* modptr,
+        const size_t jump_label,
+        const size_t jump_target);

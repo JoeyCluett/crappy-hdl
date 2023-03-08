@@ -11,6 +11,11 @@ static std::string dis_get_ref_name(
         struct module_desc_t* modptr,
         size_t ref);
 
+static std::string dis_get_jump_target(
+        struct module_desc_t* modptr,
+        std::vector<uint8_t>::iterator& iter,
+        std::vector<uint8_t>::iterator& end);
+
 static opcode_t dis_get_opcode(
         std::vector<uint8_t>::iterator& iter);
 
@@ -26,6 +31,22 @@ void disassemble_bytecode(std::ostream& os, struct module_desc_t* modptr) {
 
         switch(dis_get_opcode(opc_iter)) {
         case opcode_t::clear_stack: os << "clear_stack\n"; break;
+
+        case opcode_t::jump_exe: { // <opc> <label>
+            os << "jump [" << dis_get_jump_target(modptr, opc_iter, opc_end) << "]\n";
+            break;
+        }
+
+        case opcode_t::jump_false: { // <opc> <label>
+            os << "jump_false [" << dis_get_jump_target(modptr, opc_iter, opc_end) << "]\n";
+            break;
+        }
+
+        case opcode_t::jump_true: { // <opc> <label>
+            os << "jump_true [" << dis_get_jump_target(modptr, opc_iter, opc_end) << "]\n";
+            break;
+        }
+
         case opcode_t::push_in_ref: { // <opc> <ref>
             size_t ref = dis_get_ref(opc_iter, opc_end);
             os << "push_in_ref [" << dis_get_ref_name(modptr, ref) << "]\n";
@@ -76,10 +97,29 @@ void disassemble_bytecode(std::ostream& os, struct module_desc_t* modptr) {
             os << "set_interface_size\n";
             break;
 
-        case opcode_t::pop_scope:         os << "pop_scope\n";         break;
-        case opcode_t::return_:           os << "return\n";            break;
+        case opcode_t::pop_scope:      os << "pop_scope\n";   break;
+        case opcode_t::return_:        os << "return\n";      break;
+        case opcode_t::push_scope_for: os << "push_scope_for\n"; break;
+        case opcode_t::push_scope_if:  os << "push_scope_if\n";  break;
+
         case opcode_t::push_arr_sentinal: os << "push_arr_sentinal\n"; break;
-        case opcode_t::function_call:     os << "function_call\n";     break;
+        case opcode_t::function_call: {
+            os << "function_call [";
+            function_type_t ft = static_cast<function_type_t>(*opc_iter++);
+            switch(ft) {
+            case function_type_t::UNKNOWN: os << "UNKNOWN]\n"; break;
+            case function_type_t::push:    os << "push]\n";    break;
+            case function_type_t::last:    os << "last]\n";    break;
+            case function_type_t::print:   os << "print]\n";   break;
+            case function_type_t::cast:    os << "cast]\n";    break;
+            case function_type_t::vector:  os << "vector]\n";  break;
+            case function_type_t::not_:    os << "not]\n";     break;
+            default: os << "invalid function type]\n"; break;
+            }
+            break;
+        }
+
+        case opcode_t::index_call: os << "index_call\n"; break;
 
         case opcode_t::operator_get_field:    os << "get_field\n"; break;
         case opcode_t::operator_unary_negate: os << "negate\n";    break;
@@ -101,6 +141,12 @@ void disassemble_bytecode(std::ostream& os, struct module_desc_t* modptr) {
         case opcode_t::operator_cmp_ge: os << "cmp_ge\n"; break;
 
         case opcode_t::operator_range_desc: os << "range\n"; break;
+
+        case opcode_t::push_new_local_any: {
+            size_t ref = dis_get_ref(opc_iter, opc_end);
+            os << "push_new_local_any [" << dis_get_ref_name(modptr, ref) << "]\n";
+            break;
+        }
 
         case opcode_t::push_new_local_integer: { // <opc> <ref>
             size_t ref = dis_get_ref(opc_iter, opc_end);
@@ -136,13 +182,20 @@ void disassemble_bytecode(std::ostream& os, struct module_desc_t* modptr) {
             os << "push_module_args_sentinal\n";
             break;
 
-        case opcode_t::push_new_local_module:
+        case opcode_t::push_new_local_module: {
             size_t ref = dis_get_ref(opc_iter, opc_end);
             os << "push_new_local_module [" << dis_get_ref_name(modptr, ref) << "]\n";
             break;
+        }
 
-        //default:
-        //    os << "UNKNOWN OPCODE\n"; break;
+        case opcode_t::push_bit_literal: { // <opc> <ref>
+            size_t ref = dis_get_ref(opc_iter, opc_end);
+            os << "push_bit_literal [" << dis_get_ref_name(modptr, ref) << "]\n";
+            break;
+        }
+
+        default:
+            os << "UNKNOWN OPCODE\n"; break;
         }
     }
 }
@@ -161,6 +214,19 @@ static opcode_t dis_get_opcode(
     }
 
     return static_cast<opcode_t>(u16);
+}
+
+static std::string dis_get_jump_target(
+        struct module_desc_t* modptr,
+        std::vector<uint8_t>::iterator& iter,
+        std::vector<uint8_t>::iterator& end) {
+
+    const size_t imag_ref = dis_get_ref(iter, end);
+    const size_t target = modptr->jump_targets.at(imag_ref);
+
+    if(target == ~0ul)
+        return "UNDEFINED";
+    return std::to_string(target);
 }
 
 static std::string dis_get_ref_name(

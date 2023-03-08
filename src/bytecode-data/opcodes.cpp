@@ -48,6 +48,21 @@ void opc::clear_stack(struct module_desc_t* modptr) {
     opc_inst(modptr, opcode_t::clear_stack);
 }
 
+void opc::jump_exe(struct module_desc_t* modptr, const size_t jump_label) {
+    opc_inst(modptr, opcode_t::jump_exe);
+    opc_size_const(modptr, jump_label);
+}
+
+void opc::jump_on_false(struct module_desc_t* modptr, const size_t jump_label) {
+    opc_inst(modptr, opcode_t::jump_false);
+    opc_size_const(modptr, jump_label);
+}
+
+void opc::jump_on_true(struct module_desc_t* modptr, const size_t jump_label) {
+    opc_inst(modptr, opcode_t::jump_true);
+    opc_size_const(modptr, jump_label);
+}
+
 void opc::set_interface_size(struct module_desc_t* modptr) {
     opc_inst(modptr, opcode_t::set_interface_size);
 }
@@ -121,6 +136,11 @@ void opc::push_new_local(struct module_desc_t* modptr, token_type_t t, const siz
     }
 }
 
+void opc::push_new_local_any(struct module_desc_t* modptr, const size_t ref) {
+    opc_inst(modptr, opcode_t::push_new_local_any);
+    opc_size_const(modptr, ref);
+}
+
 void opc::push_new_local_integer(struct module_desc_t* modptr, const size_t ref) {
     opc_inst(modptr, opcode_t::push_new_local_integer);
     opc_size_const(modptr, ref);
@@ -150,6 +170,14 @@ void opc::pop_scope(struct module_desc_t* modptr) {
     opc_inst(modptr, opcode_t::pop_scope);
 }
 
+void opc::push_scope_if(struct module_desc_t* modptr) {
+    opc_inst(modptr, opcode_t::push_scope_if);
+}
+
+void opc::push_scope_for(struct module_desc_t* modptr) {
+    opc_inst(modptr, opcode_t::push_scope_for);
+}
+
 void opc::return_(struct module_desc_t* modptr) {
     opc_inst(modptr, opcode_t::return_);
 }
@@ -176,6 +204,7 @@ namespace operator_ {
     void binary_or(struct module_desc_t* modptr) { opc_inst(modptr, opcode_t::operator_binary_or); }
 
     void range_desc(struct module_desc_t* modptr) { opc_inst(modptr, opcode_t::operator_range_desc); }
+    void index_call(struct module_desc_t* modptr) { opc_inst(modptr, opcode_t::index_call); }
 
 } // namespace operator
 } // namespace opc

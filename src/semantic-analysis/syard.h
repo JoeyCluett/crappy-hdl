@@ -10,7 +10,7 @@
 #include <utility>
 
 enum eval_token_t {
-    numeric_reference, // used for a variety of things, doesnt evaluate proper operations, only existence
+    numeric_reference,
     variable_reference,
     module_reference,
     left_paren,
@@ -47,6 +47,14 @@ void shunting_yard_eval_operator(
         const token_iterator_t& tend,
         shunting_stack_t& shunt_stack,
         const token_t& t);
+
+void shunting_yard_eval_semicolon(
+        struct runtime_env_t* rtenv,
+        struct module_desc_t* modptr,
+        struct parse_info_t& p,
+        token_iterator_t& titer,
+        const token_iterator_t& tend,
+        shunting_stack_t& shunt_stack);
 
 //void shunting_yard_print_eval_stack(shunting_stack_t& shunt_stack);
 void shunting_yard_print_eval_stack(shunting_stack_t& shunt_stack, src_t& s);

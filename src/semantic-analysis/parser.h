@@ -28,6 +28,8 @@ struct parse_scope_info_t {
         struct {
             size_t condition_tag;
             size_t afterthought_tag;
+            size_t end_scope_tag;
+            size_t body_tag;
         } for_type;
 
         struct {

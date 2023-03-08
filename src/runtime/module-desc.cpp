@@ -111,3 +111,30 @@ void module_desc_add_argument_desc(
     size_t arg_idx = module_desc_add_string_constant(modptr, arg_name_s);
     modptr->argument_list.push_back({ arg_idx, arg_type.type });
 }
+
+size_t module_desc_alloc_jump_label(
+        module_desc_t* modptr) {
+
+    size_t next_avail = modptr->jump_targets.size();
+
+    const size_t unused = ~0ul;
+    modptr->jump_targets.insert({ next_avail, unused });
+
+    return next_avail;
+}
+
+void module_desc_define_jump_label(
+        module_desc_t* modptr,
+        const size_t jump_label,
+        const size_t jump_target) {
+
+    auto iter = modptr->jump_targets.find(jump_label);
+    if(iter == modptr->jump_targets.end())
+        INTERNAL_ERR();
+
+    const size_t unused = ~0ul;
+    if(iter->second != unused)
+        INTERNAL_ERR();
+
+    iter->second = jump_target;
+}

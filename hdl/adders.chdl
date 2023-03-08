@@ -4,34 +4,29 @@
 //
 
 module adder(width : integer)
-    in: cin, a[width/2], b[width];
+    in: cin, a[width], b[width];
     out: cout, sum[width];
 start
 
-    local local_vec_name : vector;// = vector( 0, @1001, module.full_adder() );
-
+    local local_vec_name : string = vector(vector(1, 2, 3)) + vector( 0, @1001, module.full_adder() );
     push(local_vec_name, local_vec_name); // SCARY self-referential vector. its fine because
                                           // this vector will not exist after this module returns
 
-    local adders: vector;
+    local adders = vector();
     ref current_cin = (((((in.cin)))));
 
-    local i : integer;
+    for local i = 0; i < width; i = i + 1 start
+        push(adders, module.full_adder()); // push an instance of full_adder onto adders vector
 
-    local random_module = module.full_adder(1-1, 2*8+3/2);
+        last(adders).cin = current_cin;
+        last(adders).a   = in.a[i];
+        last(adders).b   = in.b[i];
 
-//    for i = 0; i < width; i = i + 1 start
-//        push(adders, module.full_adder()); // push an instance of full_adder onto adders vector
-//
-//        last(adders).cin = current_cin;
-//        last(adders).a   = in.a[i];
-//        last(adders).b   = in.b[i];
-//
-//        out.sum[i]  = last(adders).sum;  // save output bit
-//        current_cin = last(adders).cout; // update carry for next adder
-//    end
-//
-//    out.cout = current_cin;
+        out.sum[i]  = last(adders).sum;  // save output bit
+        current_cin = last(adders).cout; // update carry for next adder
+    end
+
+    out.cout = current_cin;
 end
 
 //
@@ -47,5 +42,5 @@ start
 end
 
  
-false
-true
+//false
+//true
