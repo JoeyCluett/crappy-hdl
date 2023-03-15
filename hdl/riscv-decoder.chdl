@@ -1,6 +1,6 @@
 // modular programming ftw
 
-uses "riscv-inst-unmarshall"
+//uses "riscv-inst-unmarshall"
 
 module RISCV_Decoder(void)
     in: inst[32];
@@ -37,7 +37,7 @@ start
     out.rs2 = Unm.rs2;
     out.rd  = Unm.rd;
 
-    local opc7 = builtin.match(
+    local opc7 = match(
             @0110111, // output index 0
             @0010111,
             @1101111,
@@ -63,7 +63,7 @@ start
     ref opc_0001111 = opc7.output[ 9]; // FENCE, FENCE.I (both ignored, but we still need to decode them)
     ref opc_1110011 = opc7.output[10]; // ECALL, ignored: EBREAK, CSRRW, CSRRS, CSRRC, CSRRWI, CSRRSI, CSRRCI
 
-    local decode_fn3 = builtin.decoder( 8, 0, Unm.funct3 ); // number of output bits, starting input value, input bits
+    local decode_fn3 = decoder( 8, 0, Unm.funct3 ); // number of output bits, starting input value, input bits
 
     ref fn3_000 = decode_fn3.output[0b000]; 
     ref fn3_001 = decode_fn3.output[0b001];
@@ -74,7 +74,7 @@ start
     ref fn3_110 = decode_fn3.output[0b110]; 
     ref fn3_111 = decode_fn3.output[0b111];
 
-    local fn7 = builtin.match(
+    local fn7 = match(
             @0000000,
             @0100000,
             Unm.funct7);
@@ -82,7 +82,7 @@ start
     ref fn7_0000000 = fn7.output[0];
     ref fn7_0100000 = fn7.output[1];
 
-    local fn_ECALL = builtin.cmpeq(@00000000_00000000_00000000_01110011, in.inst);
+    local fn_ECALL = cmpeq(@00000000_00000000_00000000_01110011, in.inst);
 
     //
     // define each instruction-out bit as the 
@@ -135,7 +135,7 @@ start
 
     out.ECALL = fn_ECALL.output;
 
-    out.IGNORED = !(
+    out.IGNORED = not(
             LUI | AUIPC | JAL | JALR | BEQ | BNE | BLT | 
             BGE | BLTU | BGEU | LB | LH | LW | LBU | 
             LHU | SB | SH | SW | ADDI | SLTI | SLTIU | 

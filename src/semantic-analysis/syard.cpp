@@ -76,9 +76,9 @@ void process_shunting_yard(
         if(shunt_behavior == shunt_behavior_before && end_types.find(tok.type) != end_types.end())
             return;
 
-        std::cout << lexer_token_desc(tok, p.src) << std::endl;
-        std::cout << "\nBEFORE EVAL\n\n";
-        shunting_yard_print_eval_stack(shunt_stack, p.src);
+        //std::cout << lexer_token_desc(tok, p.src) << std::endl;
+        //std::cout << "\nBEFORE EVAL\n\n";
+        //shunting_yard_print_eval_stack(shunt_stack, p.src);
 
         #pragma GCC diagnostic push
         #pragma GCC diagnostic ignored "-Wswitch-enum"
@@ -100,7 +100,7 @@ void process_shunting_yard(
         case token_type_t::variable_name: {
             std::string val = lexer_token_value(tok, p.src);
             auto pr         = module_desc_get_idx_of_string(modptr, val);
-            if(pr.first == false)
+            if(pr.first == false && (*(titer-2)).type != token_type_t::period)
                 throw_parse_error("local variable with name `" + val + "' does not exist in module `" + modptr->name + "'", p.filename, p.src, tok);
 
             opc::push_local(modptr, pr.second);
@@ -111,6 +111,16 @@ void process_shunting_yard(
         case token_type_t::semicolon:
             shunting_yard_eval_semicolon(rtenv, modptr, p, titer, tend, shunt_stack);
             opc::clear_stack(modptr);
+            break;
+
+        case token_type_t::keyword_false_:
+            opc::push_false(modptr);
+            shunt_stack.eval_stack.push_back(eval_token_t::numeric_reference);
+            break;
+
+        case token_type_t::keyword_true_:
+            opc::push_true(modptr);
+            shunt_stack.eval_stack.push_back(eval_token_t::numeric_reference);
             break;
 
         case token_type_t::keyword_ref: {
@@ -181,23 +191,20 @@ void process_shunting_yard(
             break;
         }
 
-        case token_type_t::keyword_vector:
-        {
+        case token_type_t::keyword_vector: {
             token_t expect_lparen = *titer++;
             if(expect_lparen.type != token_type_t::lparen) {
                 throw_parse_error("Expecting `(', found " + lexer_token_desc(expect_lparen, p.src), p.filename, p.src, expect_lparen);
             }
 
             shunt_stack.op_stack.push_back(tok);
-            //opc::push_fn_args_sentinal(modptr);
             opc::push_vec_args_sentinal(modptr);
             shunt_stack.eval_stack.push_back(eval_token_t::function_arg_sentinal);
 
             break;
         }
 
-        case token_type_t::keyword_module:
-        {
+        case token_type_t::keyword_module: {
             if(shunt_stack.eval_stack.size() == 0ul || shunt_stack.op_stack.size() == 0ul)
                 throw_parse_error(
                         "Module instance must be part of assignment to local",
@@ -487,9 +494,9 @@ void process_shunting_yard(
         }
         #pragma GCC diagnostic pop
 
-        std::cout << "\nAFTER EVAL\n\n";
-        shunting_yard_print_eval_stack(shunt_stack, p.src);
-        std::cout << ">>>> -------------------------------------------------------------\n";
+        //std::cout << "\nAFTER EVAL\n\n";
+        //shunting_yard_print_eval_stack(shunt_stack, p.src);
+        //std::cout << ">>>> -------------------------------------------------------------\n";
 
         //shunting_yard_print_eval_stack(shunt_stack, p.src);
 
@@ -539,7 +546,10 @@ void shunting_yard_eval_operator(
         { token_type_t::greater_eq,   opcode_t::operator_cmp_ge    },
         { token_type_t::less_than,    opcode_t::operator_cmp_lt    },
         { token_type_t::less_eq,      opcode_t::operator_cmp_le    },
+        { token_type_t::colon,        opcode_t::operator_range_desc },
     };
+
+    //std::cout << "eval operator " << lexer_token_desc(t, p.src) << std::endl;
 
     #pragma GCC diagnostic push
     #pragma GCC diagnostic ignored "-Wswitch-enum"
@@ -586,6 +596,7 @@ void shunting_yard_eval_operator(
     case token_type_t::caret:
     case token_type_t::pipe:
     case token_type_t::assign:
+    case token_type_t::colon:
     {
         if(shunt_stack.eval_stack.size() < 2ul)
             throw_parse_error("Insufficient operands for operator " + lexer_token_desc(t, p.src), p.filename, p.src, t);

@@ -27,7 +27,6 @@ enum class token_type_t {
     keyword_for,
     keyword_true_,  // true literal
     keyword_false_, // false literal
-    keyword_not,    // not
 
     variable_name,
     bit_literal, // @00_1010_0101 etc.
@@ -76,9 +75,29 @@ enum class function_type_t : uint8_t {
     print,
     cast,
 
+    cmpeq,
+    match,
+    decoder,
+    not_,
+
+    signal,
+
+    wire,
+    and_,
+    nand,
+    or_,
+    nor_,
+    xor_,
+    xnor_,
+    flipflop,
+    set_data,
+    set_clock,
+        
+
+    size,
+
     // these are functions AND keywords
     vector,
-    not_,
 };
 
 struct token_t {

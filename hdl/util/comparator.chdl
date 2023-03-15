@@ -1,0 +1,84 @@
+
+
+module m74x85_MagCmp4Bit(void)
+    in:
+        A[4],
+        B[4];
+    in:  iA_gt_B, iA_lt_B, iA_eq_B;
+    out: oA_gt_B, oA_lt_B, oA_eq_B;
+start
+
+    local t = vector();
+    local T = vector();
+
+    for local i = 0; i < 4; i = i + 1 start
+        push(t, nand(in.A[i], in.B[i]));
+        push(T, xnor(in.A[i], in.B[i]));
+    end
+
+    out.oA_gt_B = and(
+            nand( in.B[3], t[3] ),
+            nand( in.B[2], t[2], T[3] ),
+            nand( in.B[1], t[1], T[3], T[2] ),
+            nand( in.B[0], t[0], T[3], T[2], T[1] ),
+            nand(                T[3], T[2], T[1], T[0], in.iA_lt_B ),
+            nand(                T[3], T[2], T[1], T[0], in.iA_eq_B ));
+
+    out.oA_eq_B = and( T[3], T[2], T[1], T[0], in.iA_eq_B );
+
+    out.oA_lt_B = and(
+            nand(                T[3], T[2], T[1], T[0], in.iA_eq_B ),
+            nand(                T[3], T[2], T[1], T[0], in.iA_gt_B ),
+            nand( in.A[0], t[0], T[3], T[2], T[1] ),
+            nand( in.A[1], t[1], T[3], T[2] ),
+            nand( in.A[2], t[2], T[3] ),
+            nand( in.A[3], t[3] ));
+end
+
+module MagCmpUnit(void)
+    in: A, B, prop_disable;
+    out: A_lt_B, A_gt_B, A_ne_B;
+start
+    local nPD   = not(in.prop_disable);
+    local axorb = xor(in.A, in.B);
+
+    out.A_gt_B = and(nPD, in.A, axorb);
+    out.A_lt_B = and(nPD, in.B, axorb);
+    out.A_ne_B = axorb;
+end
+
+module MagCmpNBit(width : integer)
+    in:
+        A[width],
+        B[width];
+    out: A_gt_B, A_lt_B, A_eq_B;
+start
+
+    local cmps = vector();
+
+    local gt_sigs = vector();
+    local lt_sigs = vector();
+    local eq_sigs = vector();
+
+    for local i = 0; i < width; i=i+1 start
+        push(cmps, module.MagCmpUnit());
+        push(lt_sigs, last(cmps).A_lt_B);
+        push(gt_sigs, last(cmps).A_gt_B);
+        push(eq_sigs, last(cmps).A_ne_B);
+    end
+
+    out.A_gt_B = or(gt_sigs);
+    out.A_lt_B = or(lt_sigs);
+    out.A_eq_B = nor(eq_sigs);
+
+    last(cmps).prop_disable = false;
+
+    for local i = 0; i < width; i=i+1 start
+        local v = vector();
+        for local j=i+1; j < width; j=j+1 start
+            push(v, cmps[j].A_ne_B);
+        end
+        cmps[i].prop_disable = or(v);
+    end
+
+end

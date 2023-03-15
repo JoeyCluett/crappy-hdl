@@ -63,6 +63,14 @@ void opc::jump_on_true(struct module_desc_t* modptr, const size_t jump_label) {
     opc_size_const(modptr, jump_label);
 }
 
+void opc::push_true(struct module_desc_t* modptr) {
+    opc_inst(modptr, opcode_t::push_true);
+}
+
+void opc::push_false(struct module_desc_t* modptr) {
+    opc_inst(modptr, opcode_t::push_false);
+}
+
 void opc::set_interface_size(struct module_desc_t* modptr) {
     opc_inst(modptr, opcode_t::set_interface_size);
 }

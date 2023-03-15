@@ -498,10 +498,29 @@ static const std::map<std::string, token_type_t> keywords = {
 };
 
 static const std::map<std::string, function_type_t> functions = {
-    { "push",  function_type_t::push  },
-    { "last",  function_type_t::last  },
-    { "print", function_type_t::print },
-    { "cast",  function_type_t::cast  },
+    { "push",    function_type_t::push  },
+    { "last",    function_type_t::last  },
+    { "print",   function_type_t::print },
+    { "cast",    function_type_t::cast  },
+
+    { "cmpeq",   function_type_t::cmpeq   },
+    { "match",   function_type_t::match   },
+    { "decoder", function_type_t::decoder },
+    { "signal",  function_type_t::signal  },
+
+    { "wire",      function_type_t::wire      },
+    { "and",       function_type_t::and_      },
+    { "nand",      function_type_t::nand      },
+    { "or",        function_type_t::or_       },
+    { "nor",       function_type_t::nor_      },
+    { "xor",       function_type_t::xor_      },
+    { "xnor",      function_type_t::xnor_     },
+    { "flipflop",  function_type_t::flipflop  },
+    { "set_data",  function_type_t::set_data  },
+    { "set_clock", function_type_t::set_clock },
+    { "size",      function_type_t::size      },
+
+    { "not",     function_type_t::not_ },
 };
 
 std::tuple<bool, string_t, token_type_t> lexer_token_is_keyword(const std::string& s) {

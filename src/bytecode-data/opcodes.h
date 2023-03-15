@@ -17,6 +17,9 @@ enum class opcode_t : uint16_t {
     push_scope_if,
     return_,   // returns from module, returning from module before outputs are assigned is bad
 
+    push_true,
+    push_false,
+
     push_in_ref,
     push_out_ref,
     push_new_local_ref,
@@ -73,6 +76,9 @@ namespace opc {
     void jump_exe(struct module_desc_t* modptr, const size_t jump_label);
     void jump_on_false(struct module_desc_t* modptr, const size_t jump_label);
     void jump_on_true(struct module_desc_t* modptr, const size_t jump_label);
+
+    void push_true(struct module_desc_t* modptr);
+    void push_false(struct module_desc_t* modptr);
 
     void push_scope_if(struct module_desc_t* modptr);
     void push_scope_for(struct module_desc_t* modptr);

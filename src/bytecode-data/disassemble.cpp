@@ -47,6 +47,9 @@ void disassemble_bytecode(std::ostream& os, struct module_desc_t* modptr) {
             break;
         }
 
+        case opcode_t::push_true:  os << "push_true\n"; break;
+        case opcode_t::push_false: os << "push_false\n"; break;
+
         case opcode_t::push_in_ref: { // <opc> <ref>
             size_t ref = dis_get_ref(opc_iter, opc_end);
             os << "push_in_ref [" << dis_get_ref_name(modptr, ref) << "]\n";
@@ -112,8 +115,24 @@ void disassemble_bytecode(std::ostream& os, struct module_desc_t* modptr) {
             case function_type_t::last:    os << "last]\n";    break;
             case function_type_t::print:   os << "print]\n";   break;
             case function_type_t::cast:    os << "cast]\n";    break;
+            case function_type_t::cmpeq:   os << "cmpeq]\n";   break;
+            case function_type_t::match:   os << "match]\n";   break;
+            case function_type_t::decoder: os << "decoder]\n"; break;
             case function_type_t::vector:  os << "vector]\n";  break;
             case function_type_t::not_:    os << "not]\n";     break;
+            case function_type_t::signal:  os << "signal]\n";  break;
+
+            case function_type_t::and_     : os << "and]\n";       break;
+            case function_type_t::nand     : os << "nand]\n";      break;
+            case function_type_t::or_      : os << "or]\n";        break;
+            case function_type_t::nor_     : os << "nor]\n";       break;
+            case function_type_t::xor_     : os << "xor]\n";       break;
+            case function_type_t::xnor_    : os << "xnor]\n";      break;
+            case function_type_t::flipflop : os << "flipflop]\n";  break;
+            case function_type_t::set_data : os << "set_data]\n";  break;
+            case function_type_t::set_clock: os << "set_clock]\n"; break;
+            case function_type_t::size     : os << "size]\n";      break;
+
             default: os << "invalid function type]\n"; break;
             }
             break;

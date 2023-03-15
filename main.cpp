@@ -13,8 +13,10 @@ static std::string right_pad(const std::string& input_str, int len);
 
 int main(int argc, char* argv[]) {
 
+    std::string filename = "hdl/util/comparator.chdl";
+//    std::string filename = "hdl/riscv-inst-unmarshall.chdl";
 //    std::string filename = "hdl/riscv-decoder.chdl";
-    std::string filename = "hdl/adders.chdl";
+//    std::string filename = "hdl/adders.chdl";
 
     runtime_env_t* renv = NULL;
 
