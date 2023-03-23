@@ -83,16 +83,21 @@ enum class function_type_t : uint8_t {
     signal,
 
     wire,
+
+    tristate,
+    set_tristate_data,
+    set_tristate_enable,
+
     and_,
     nand,
     or_,
     nor_,
     xor_,
     xnor_,
+
     flipflop,
-    set_data,
-    set_clock,
-        
+    set_ff_data,
+    set_ff_clock,
 
     size,
 

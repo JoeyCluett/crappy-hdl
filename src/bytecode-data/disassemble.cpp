@@ -129,8 +129,8 @@ void disassemble_bytecode(std::ostream& os, struct module_desc_t* modptr) {
             case function_type_t::xor_     : os << "xor]\n";       break;
             case function_type_t::xnor_    : os << "xnor]\n";      break;
             case function_type_t::flipflop : os << "flipflop]\n";  break;
-            case function_type_t::set_data : os << "set_data]\n";  break;
-            case function_type_t::set_clock: os << "set_clock]\n"; break;
+            case function_type_t::set_ff_data : os << "set_ff_data]\n";  break;
+            case function_type_t::set_ff_clock: os << "set_ff_clock]\n"; break;
             case function_type_t::size     : os << "size]\n";      break;
 
             default: os << "invalid function type]\n"; break;

@@ -516,11 +516,15 @@ static const std::map<std::string, function_type_t> functions = {
     { "xor",       function_type_t::xor_      },
     { "xnor",      function_type_t::xnor_     },
     { "flipflop",  function_type_t::flipflop  },
-    { "set_data",  function_type_t::set_data  },
-    { "set_clock", function_type_t::set_clock },
-    { "size",      function_type_t::size      },
+    { "set_ff_data",  function_type_t::set_ff_data  },
+    { "set_ff_clock", function_type_t::set_ff_clock },
 
-    { "not",     function_type_t::not_ },
+    { "tristate",            function_type_t::tristate            },
+    { "set_tristate_data",   function_type_t::set_tristate_data   },
+    { "set_tristate_enable", function_type_t::set_tristate_enable },
+
+    { "size",      function_type_t::size      },
+    { "not",       function_type_t::not_ },
 };
 
 std::tuple<bool, string_t, token_type_t> lexer_token_is_keyword(const std::string& s) {
