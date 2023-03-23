@@ -3,16 +3,11 @@ module n_bit_register(width : integer)
     in: Clk, In[width];
     out: Out[width];
 start
-    local r = vector();
-
     for local i : integer = 0; i < width; i = i+1 start1
         local ff = flipflop():
-        set_data(ff, in.In[i]);
-        set_clk(ff, in.Clk);
 
-        
-
-        push(r, ff);
+        set_ff_data(ff, in.In[i]);
+        set_ff_clk(ff, in.Clk);
+        out.Out[i] = get_ff_output(ff);
     end
-
 end

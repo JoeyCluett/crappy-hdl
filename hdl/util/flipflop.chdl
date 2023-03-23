@@ -1,0 +1,14 @@
+
+module flipflop(void)
+    in: d, clk;
+    out: q;
+start
+
+    local ff = flipflop();
+
+    set_ff_clk(ff, in.clk);
+    set_ff_data(ff, in.d);
+    out.q = ff;
+
+    return;
+end
